@@ -1,0 +1,15 @@
+{
+  "name": "ILLAM-E-PUNJAB",
+  "short_name": "ILLAM",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#7B181B",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

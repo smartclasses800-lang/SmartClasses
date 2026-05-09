@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import SiteShell from '../components/SiteShell'
@@ -10,6 +10,8 @@ const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'illamerpunjab@gmail.
 const bookPriceInPaise = Number(import.meta.env.VITE_BOOK_PRICE_INR || 69900)
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
 const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID || ''
+
+const STORAGE_KEY = 'checkoutFormData'
 
 const initialFormState = {
   fullName: '',
@@ -26,9 +28,26 @@ const initialFormState = {
   country: 'India',
 }
 
+function getSavedFormState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      return { ...initialFormState, ...parsed }
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return initialFormState
+}
+
 function CheckoutPage() {
   const navigate = useNavigate()
-  const [formData, setFormData] = useState(initialFormState)
+  const [formData, setFormData] = useState(getSavedFormState)
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
+  }, [formData])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -161,6 +180,7 @@ function CheckoutPage() {
               throw new Error('Payment completed but backend verification failed.')
             }
 
+            localStorage.removeItem(STORAGE_KEY)
             const params = new URLSearchParams({
               paymentId: paymentResponse.razorpay_payment_id || '',
               orderId: paymentResponse.razorpay_order_id || order.orderId,

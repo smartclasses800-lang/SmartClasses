@@ -1,15 +1,32 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogOut, PackageCheck, RefreshCw, Send } from 'lucide-react'
+import {
+  AlertCircle,
+  CheckCircle,
+  ClipboardList,
+  CreditCard,
+  ExternalLink,
+  Loader2,
+  LogOut,
+  PackageCheck,
+  Pencil,
+  RefreshCw,
+  Send,
+  Truck,
+} from 'lucide-react'
 import { getAdminSession, getAdminToken, logoutAdmin } from '../lib/adminAuth'
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
 
-function formatDateTime(value) {
-  if (!value) {
-    return 'N/A'
-  }
+const TABS = [
+  { key: 'all', label: 'All Orders', icon: ClipboardList },
+  { key: 'pending', label: 'Pending Payments', icon: CreditCard },
+  { key: 'paid', label: 'Paid Orders', icon: AlertCircle },
+  { key: 'dispatched', label: 'Sent / Delivered', icon: Truck },
+]
 
+function formatDateTime(value) {
+  if (!value) return 'N/A'
   return new Date(value).toLocaleString('en-IN', {
     year: 'numeric',
     month: 'short',
@@ -19,6 +36,22 @@ function formatDateTime(value) {
   })
 }
 
+function StatusBadge({ status }) {
+  const map = {
+    pending_payment: { text: 'Pending Payment', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+    paid: { text: 'Paid', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    out_for_delivery: { text: 'Out for Delivery', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+    delivered: { text: 'Delivered', color: 'bg-slate-100 text-slate-700 border-slate-200' },
+    failed: { text: 'Failed', color: 'bg-red-50 text-red-700 border-red-200' },
+  }
+  const s = map[status] || { text: status, color: 'bg-slate-50 text-slate-700 border-slate-200' }
+  return (
+    <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${s.color}`}>
+      {s.text}
+    </span>
+  )
+}
+
 function AdminDashboardPage() {
   const navigate = useNavigate()
   const [orders, setOrders] = useState([])
@@ -26,6 +59,10 @@ function AdminDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [actionMessage, setActionMessage] = useState('')
   const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState('paid')
+  const [sendingTracker, setSendingTracker] = useState({})
+  const [markingDelivered, setMarkingDelivered] = useState({})
+  const [resendingTracker, setResendingTracker] = useState({})
 
   const session = getAdminSession()
   const token = getAdminToken()
@@ -33,153 +70,16 @@ function AdminDashboardPage() {
   const loadOrders = async () => {
     setLoading(true)
     setError('')
-
     try {
-      // Hardcoded mock data for demonstration
-      const mockOrders = [
-        {
-          razorpayOrderId: 'ORD001',
-          status: 'paid',
-          customer: {
-            fullName: 'Rajesh Kumar',
-            email: 'rajesh.kumar@example.com',
-            phone: '+91 98765 43210',
-            medium: 'Online',
-          },
-          payment: {
-            razorpayPaymentId: 'PAY_001',
-            verifiedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-          },
-          paidAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-          amount: 49999,
-          shippingAddress: {
-            addressLine1: '123 Punjabi Street',
-            addressLine2: 'Near Gurudwara',
-            landmark: 'Opposite School',
-            city: 'Amritsar',
-            district: 'Amritsar',
-            state: 'Punjab',
-            pincode: '143001',
-            country: 'India',
-          },
-          trackerId: '',
-          dispatchedAt: null,
-        },
-        {
-          razorpayOrderId: 'ORD002',
-          status: 'paid',
-          customer: {
-            fullName: 'Priya Singh',
-            email: 'priya.singh@example.com',
-            phone: '+91 97654 32109',
-            medium: 'Online',
-          },
-          payment: {
-            razorpayPaymentId: 'PAY_002',
-            verifiedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-          },
-          paidAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-          amount: 79999,
-          shippingAddress: {
-            addressLine1: '456 Golden Temple Road',
-            addressLine2: 'Apartment 5B',
-            landmark: 'Near Hotel Punjab',
-            city: 'Ludhiana',
-            district: 'Ludhiana',
-            state: 'Punjab',
-            pincode: '141001',
-            country: 'India',
-          },
-          trackerId: '',
-          dispatchedAt: null,
-        },
-        {
-          razorpayOrderId: 'ORD003',
-          status: 'out_for_delivery',
-          customer: {
-            fullName: 'Harpreet Kaur',
-            email: 'harpreet.kaur@example.com',
-            phone: '+91 96543 21098',
-            medium: 'Online',
-          },
-          payment: {
-            razorpayPaymentId: 'PAY_003',
-            verifiedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-          },
-          paidAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-          amount: 59999,
-          shippingAddress: {
-            addressLine1: '789 Chandigarh Road',
-            addressLine2: 'House No. 42',
-            landmark: 'Near Market',
-            city: 'Jalandhar',
-            district: 'Jalandhar',
-            state: 'Punjab',
-            pincode: '144001',
-            country: 'India',
-          },
-          trackerId: 'EA123456789IN',
-          dispatchedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        },
-        {
-          razorpayOrderId: 'ORD004',
-          status: 'delivered',
-          customer: {
-            fullName: 'Simran Sharma',
-            email: 'simran.sharma@example.com',
-            phone: '+91 95432 10987',
-            medium: 'Online',
-          },
-          payment: {
-            razorpayPaymentId: 'PAY_004',
-            verifiedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
-          },
-          paidAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
-          amount: 69999,
-          shippingAddress: {
-            addressLine1: '321 Mall Road',
-            addressLine2: 'Flat 10',
-            landmark: 'Opposite Cinema',
-            city: 'Patiala',
-            district: 'Patiala',
-            state: 'Punjab',
-            pincode: '147001',
-            country: 'India',
-          },
-          trackerId: 'EA987654321IN',
-          dispatchedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-        },
-        {
-          razorpayOrderId: 'ORD005',
-          status: 'paid',
-          customer: {
-            fullName: 'Akshay Verma',
-            email: 'akshay.verma@example.com',
-            phone: '+91 94321 09876',
-            medium: 'Online',
-          },
-          payment: {
-            razorpayPaymentId: 'PAY_005',
-            verifiedAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-          },
-          paidAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-          amount: 89999,
-          shippingAddress: {
-            addressLine1: '654 Leisure Valley',
-            addressLine2: 'Tower A',
-            landmark: 'Near IT Park',
-            city: 'Mohali',
-            district: 'Mohali',
-            state: 'Punjab',
-            pincode: '160062',
-            country: 'India',
-          },
-          trackerId: '',
-          dispatchedAt: null,
-        },
-      ]
-
-      setOrders(mockOrders)
+      const response = await fetch(`${apiBaseUrl}/orders`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => null)
+        throw new Error(errBody?.message || 'Unable to load orders')
+      }
+      const data = await response.json()
+      setOrders(data.orders || [])
     } catch (loadError) {
       setError(loadError.message || 'Unable to load admin orders.')
     } finally {
@@ -192,25 +92,25 @@ function AdminDashboardPage() {
       navigate('/admin/login', { replace: true })
       return
     }
-
     loadOrders()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, navigate])
 
-  const paidOrders = useMemo(
-    () => orders.filter((order) => order.status === 'paid'),
-    [orders],
-  )
-
+  const allOrders = useMemo(() => orders, [orders])
+  const pendingOrders = useMemo(() => orders.filter((o) => o.status === 'pending_payment'), [orders])
+  const paidOrders = useMemo(() => orders.filter((o) => o.status === 'paid'), [orders])
   const dispatchedOrders = useMemo(
-    () => orders.filter((order) => order.status === 'out_for_delivery' || order.status === 'delivered'),
+    () => orders.filter((o) => o.status === 'out_for_delivery' || o.status === 'delivered'),
     [orders],
   )
 
-  const pendingOrders = useMemo(
-    () => orders.filter((order) => order.status === 'pending_payment'),
-    [orders],
-  )
+  const filteredOrders = useMemo(() => {
+    if (activeTab === 'all') return allOrders
+    if (activeTab === 'pending') return pendingOrders
+    if (activeTab === 'paid') return paidOrders
+    if (activeTab === 'dispatched') return dispatchedOrders
+    return allOrders
+  }, [activeTab, allOrders, pendingOrders, paidOrders, dispatchedOrders])
 
   const handleTrackerDraft = (orderId, value) => {
     setTrackerDrafts((prev) => ({ ...prev, [orderId]: value }))
@@ -225,12 +125,10 @@ function AdminDashboardPage() {
       },
       body: JSON.stringify(payload),
     })
-
     if (!response.ok) {
       const errorBody = await response.json().catch(() => null)
       throw new Error(errorBody?.message || 'Unable to update order.')
     }
-
     const data = await response.json()
     setActionMessage(data.message || 'Order updated successfully.')
     await loadOrders()
@@ -238,31 +136,49 @@ function AdminDashboardPage() {
 
   const handleSendTrackerEmail = async (order) => {
     const trackerId = (trackerDrafts[order.razorpayOrderId] || order.trackerId || '').trim()
-
     if (!trackerId) {
       setError('Please enter tracker ID before sending email.')
       return
     }
-
+    setSendingTracker((prev) => ({ ...prev, [order.razorpayOrderId]: true }))
     try {
       await updateOrderStatus(order.razorpayOrderId, { trackerId, status: 'out_for_delivery' })
     } catch (updateError) {
       setError(updateError.message || 'Unable to send tracker email.')
+    } finally {
+      setSendingTracker((prev) => ({ ...prev, [order.razorpayOrderId]: false }))
     }
   }
 
   const handleMarkDelivered = async (order) => {
     const trackerId = (trackerDrafts[order.razorpayOrderId] || order.trackerId || '').trim()
-
     if (!trackerId) {
       setError('Please enter tracker ID before marking delivered.')
       return
     }
-
+    setMarkingDelivered((prev) => ({ ...prev, [order.razorpayOrderId]: true }))
     try {
       await updateOrderStatus(order.razorpayOrderId, { trackerId, status: 'delivered' })
     } catch (updateError) {
       setError(updateError.message || 'Unable to mark order delivered.')
+    } finally {
+      setMarkingDelivered((prev) => ({ ...prev, [order.razorpayOrderId]: false }))
+    }
+  }
+
+  const handleResendTracker = async (order) => {
+    const trackerId = (trackerDrafts[order.razorpayOrderId] || order.trackerId || '').trim()
+    if (!trackerId) {
+      setError('Please enter tracker ID before resending.')
+      return
+    }
+    setResendingTracker((prev) => ({ ...prev, [order.razorpayOrderId]: true }))
+    try {
+      await updateOrderStatus(order.razorpayOrderId, { trackerId, status: 'out_for_delivery' })
+    } catch (updateError) {
+      setError(updateError.message || 'Unable to resend tracker email.')
+    } finally {
+      setResendingTracker((prev) => ({ ...prev, [order.razorpayOrderId]: false }))
     }
   }
 
@@ -270,6 +186,13 @@ function AdminDashboardPage() {
     logoutAdmin()
     navigate('/admin/login', { replace: true })
   }
+
+  const statCards = [
+    { key: 'all', label: 'Total Orders', count: allOrders.length, color: 'text-[var(--maroon)]' },
+    { key: 'pending', label: 'Pending Payments', count: pendingOrders.length, color: 'text-amber-600' },
+    { key: 'paid', label: 'Paid Orders', count: paidOrders.length, color: 'text-emerald-600' },
+    { key: 'dispatched', label: 'Sent / Delivered', count: dispatchedOrders.length, color: 'text-blue-600' },
+  ]
 
   return (
     <div className="min-h-screen bg-[var(--muted-bg)] px-4 py-8 sm:px-6 lg:px-8">
@@ -290,9 +213,10 @@ function AdminDashboardPage() {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={loadOrders}
-                className="inline-flex items-center gap-2 rounded-md border border-[#e0cfcf] px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                disabled={loading}
+                className="inline-flex items-center gap-2 rounded-md border border-[#e0cfcf] px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
               >
-                <RefreshCw className="h-4 w-4" /> Refresh
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
               </button>
               <Link
                 to="/"
@@ -322,111 +246,235 @@ function AdminDashboardPage() {
           </div>
         ) : null}
 
-        <section className="mb-6 grid gap-4 sm:grid-cols-4">
-          <article className="rounded-xl border border-[#eadcdc] bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-600">Total Orders</p>
-            <p className="mt-2 text-3xl font-bold text-[var(--maroon)]">{orders.length}</p>
-          </article>
-          <article className="rounded-xl border border-[#eadcdc] bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-600">Pending Payments</p>
-            <p className="mt-2 text-3xl font-bold text-[var(--maroon)]">{pendingOrders.length}</p>
-          </article>
-          <article className="rounded-xl border border-[#eadcdc] bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-600">Paid Orders</p>
-            <p className="mt-2 text-3xl font-bold text-[var(--maroon)]">{paidOrders.length}</p>
-          </article>
-          <article className="rounded-xl border border-[#eadcdc] bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-600">Sent / Delivered</p>
-            <p className="mt-2 text-3xl font-bold text-[var(--maroon)]">{dispatchedOrders.length}</p>
-          </article>
+        <section className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {statCards.map((card) => (
+            <button
+              key={card.key}
+              onClick={() => setActiveTab(card.key)}
+              className={`rounded-xl border p-4 shadow-sm text-left transition ${
+                activeTab === card.key
+                  ? 'border-[var(--maroon)] bg-[#fff5f5] ring-1 ring-[var(--maroon)]'
+                  : 'border-[#eadcdc] bg-white hover:bg-slate-50'
+              }`}
+            >
+              <p className="text-sm text-slate-600">{card.label}</p>
+              <p className={`mt-2 text-3xl font-bold ${card.color}`}>{card.count}</p>
+            </button>
+          ))}
         </section>
 
-        <section className="mb-8 rounded-2xl border border-[#ebdddd] bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="title-font text-2xl font-bold text-[var(--maroon)]">
-            Paid Orders (Action Required)
-          </h2>
-
-          {loading ? (
-            <p className="mt-4 text-sm text-slate-600">Loading orders...</p>
-          ) : paidOrders.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-600">No paid orders pending dispatch.</p>
-          ) : (
-            <div className="mt-5 space-y-4">
-              {paidOrders.map((order) => (
-                <article key={order.razorpayOrderId} className="rounded-lg border border-[#ecdede] p-4">
-                  <div className="grid gap-4 lg:grid-cols-[1fr_1fr_auto]">
-                    <div className="space-y-1 text-sm text-slate-700">
-                      <p className="font-semibold text-slate-900">{order.customer.fullName}</p>
-                      <p>{order.customer.email} | {order.customer.phone}</p>
-                      <p>Order: {order.razorpayOrderId}</p>
-                      <p>Payment: {order.payment?.razorpayPaymentId || 'N/A'}</p>
-                      <p>Amount: Rs. {(Number(order.amount || 0) / 100).toFixed(0)}</p>
-                      <p>Paid At: {formatDateTime(order.payment?.verifiedAt || order.paidAt)}</p>
-                      <p>Medium: {order.customer.medium}</p>
-                    </div>
-
-                    <div className="text-sm text-slate-700">
-                      <p className="font-semibold text-slate-900">Shipping Address</p>
-                      <p className="mt-1">{order.shippingAddress.addressLine1}</p>
-                      <p>{order.shippingAddress.addressLine2}</p>
-                      <p>{order.shippingAddress.landmark || 'No landmark'}</p>
-                      <p>
-                        {order.shippingAddress.city}, {order.shippingAddress.district}
-                      </p>
-                      <p>
-                        {order.shippingAddress.state} - {order.shippingAddress.pincode}
-                      </p>
-                      <p>{order.shippingAddress.country}</p>
-                    </div>
-
-                    <div className="flex min-w-[220px] flex-col gap-2">
-                      <input
-                        value={trackerDrafts[order.razorpayOrderId] ?? order.trackerId ?? ''}
-                        onChange={(event) =>
-                          handleTrackerDraft(order.razorpayOrderId, event.target.value)
-                        }
-                        className="rounded-md border border-[#dac6c7] px-3 py-2 text-sm outline-none ring-[var(--maroon)]/25 focus:ring"
-                        placeholder="Enter India Post tracker ID"
-                      />
-                      <button
-                        onClick={() => handleSendTrackerEmail(order)}
-                        className="inline-flex items-center justify-center gap-2 rounded-md border border-[#d9c6c7] px-3 py-2 text-sm font-semibold text-[var(--maroon)] hover:bg-[#faf3f3]"
-                      >
-                        <Send className="h-4 w-4" /> Send Tracker Email
-                      </button>
-                      <button
-                        onClick={() => handleMarkDelivered(order)}
-                        className="inline-flex items-center justify-center gap-2 rounded-md bg-[var(--maroon)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--maroon-hover)]"
-                      >
-                        <PackageCheck className="h-4 w-4" /> Mark Delivered
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+        <div className="mb-6 flex flex-wrap gap-2">
+          {TABS.map((tab) => {
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition ${
+                  activeTab === tab.key
+                    ? 'border-[var(--maroon)] bg-[var(--maroon)] text-white'
+                    : 'border-[#e0cfcf] bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <Icon className="h-4 w-4" /> {tab.label}
+              </button>
+            )
+          })}
+        </div>
 
         <section className="rounded-2xl border border-[#ebdddd] bg-white p-5 shadow-sm sm:p-6">
           <h2 className="title-font text-2xl font-bold text-[var(--maroon)]">
-            Sent For Delivery / Delivered
+            {TABS.find((t) => t.key === activeTab)?.label}
           </h2>
 
-          {dispatchedOrders.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-600">No dispatched orders yet.</p>
+          {loading ? (
+            <div className="mt-8 flex items-center justify-center gap-2 text-sm text-slate-600">
+              <Loader2 className="h-5 w-5 animate-spin text-[var(--maroon)]" />
+              Loading orders...
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <p className="mt-4 text-sm text-slate-600">No orders found in this category.</p>
           ) : (
-            <div className="mt-5 space-y-3">
-              {dispatchedOrders.map((order) => (
-                <article key={order.razorpayOrderId} className="rounded-lg border border-[#ecdfdf] bg-[#fffdf9] p-4 text-sm text-slate-700">
-                  <p className="font-semibold text-slate-900">{order.customer.fullName}</p>
-                  <p className="mt-1">Order ID: {order.razorpayOrderId}</p>
-                  <p>Status: {order.status}</p>
-                  <p>Tracker ID: {order.trackerId || 'N/A'}</p>
-                  <p>Marked At: {formatDateTime(order.dispatchedAt)}</p>
-                  <p>Email: {order.customer.email}</p>
-                </article>
-              ))}
+            <div className="mt-5 space-y-4">
+              {filteredOrders.map((order) => {
+                const isSending = sendingTracker[order.razorpayOrderId]
+                const isMarking = markingDelivered[order.razorpayOrderId]
+                const isResending = resendingTracker[order.razorpayOrderId]
+                const anyActionLoading = isSending || isMarking || isResending
+                return (
+                  <article
+                    key={order.razorpayOrderId}
+                    className={`rounded-lg border p-4 transition ${anyActionLoading ? 'opacity-70' : 'opacity-100'} ${
+                      order.status === 'paid'
+                        ? 'border-[#ecdede] bg-white'
+                        : order.status === 'out_for_delivery'
+                        ? 'border-blue-200 bg-blue-50/40'
+                        : order.status === 'delivered'
+                        ? 'border-emerald-200 bg-emerald-50/30'
+                        : 'border-[#ecdede] bg-white'
+                    }`}
+                  >
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <StatusBadge status={order.status} />
+                        <span className="text-xs text-slate-500">Order: {order.razorpayOrderId}</span>
+                      </div>
+                      <span className="text-xs text-slate-500">
+                        {formatDateTime(order.payment?.verifiedAt || order.paidAt || order.createdAt)}
+                      </span>
+                    </div>
+
+                    <div className="grid gap-4 xl:grid-cols-[1fr_1fr_auto]">
+                      <div className="space-y-1 text-sm text-slate-700">
+                        <p className="font-semibold text-slate-900">{order.customer.fullName}</p>
+                        <p>{order.customer.email} | {order.customer.phone}</p>
+                        <p>Payment ID: {order.payment?.razorpayPaymentId || 'N/A'}</p>
+                        <p>Amount: Rs. {(Number(order.amount || 0) / 100).toFixed(0)}</p>
+                        <p>Medium: {order.customer.medium}</p>
+                        {order.trackerId ? (
+                          <p className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold text-slate-900">Tracker:</span>
+                            <span className="font-mono font-bold text-[var(--maroon)]">{order.trackerId}</span>
+                            <a
+                              href="https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx"
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                            >
+                              <ExternalLink className="h-3 w-3" /> Track
+                            </a>
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <div className="text-sm text-slate-700">
+                        <p className="font-semibold text-slate-900">Shipping Address</p>
+                        <p className="mt-1">{order.shippingAddress.addressLine1}</p>
+                        <p>{order.shippingAddress.addressLine2}</p>
+                        {order.shippingAddress.landmark ? <p>{order.shippingAddress.landmark}</p> : null}
+                        <p>
+                          {order.shippingAddress.city}, {order.shippingAddress.district}
+                        </p>
+                        <p>
+                          {order.shippingAddress.state} - {order.shippingAddress.pincode}
+                        </p>
+                        <p>{order.shippingAddress.country}</p>
+                      </div>
+
+                      {order.status === 'paid' ? (
+                        <div className="flex w-full flex-col gap-2 xl:min-w-[220px] xl:w-auto">
+                          <input
+                            value={trackerDrafts[order.razorpayOrderId] ?? order.trackerId ?? ''}
+                            onChange={(event) =>
+                              handleTrackerDraft(order.razorpayOrderId, event.target.value)
+                            }
+                            disabled={anyActionLoading}
+                            className="rounded-md border border-[#dac6c7] px-3 py-2 text-sm outline-none ring-[var(--maroon)]/25 transition focus:ring disabled:opacity-60"
+                            placeholder="Enter India Post tracker ID"
+                          />
+                          <button
+                            onClick={() => handleSendTrackerEmail(order)}
+                            disabled={isSending || isMarking}
+                            className="inline-flex items-center justify-center gap-2 rounded-md border border-[#d9c6c7] px-3 py-2 text-sm font-semibold text-[var(--maroon)] transition hover:bg-[#faf3f3] disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {isSending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Send className="h-4 w-4" />
+                            )}
+                            {isSending ? 'Sending...' : 'Send Tracker Email'}
+                          </button>
+                          <button
+                            onClick={() => handleMarkDelivered(order)}
+                            disabled={isSending || isMarking}
+                            className="inline-flex items-center justify-center gap-2 rounded-md bg-[var(--maroon)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--maroon-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {isMarking ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <PackageCheck className="h-4 w-4" />
+                            )}
+                            {isMarking ? 'Marking...' : 'Mark Delivered'}
+                          </button>
+                        </div>
+                      ) : order.status === 'out_for_delivery' ? (
+                        <div className="flex w-full flex-col gap-2 xl:min-w-[220px] xl:w-auto">
+                          <input
+                            value={trackerDrafts[order.razorpayOrderId] ?? order.trackerId ?? ''}
+                            onChange={(event) =>
+                              handleTrackerDraft(order.razorpayOrderId, event.target.value)
+                            }
+                            disabled={anyActionLoading}
+                            className="rounded-md border border-[#dac6c7] px-3 py-2 text-sm outline-none ring-[var(--maroon)]/25 transition focus:ring disabled:opacity-60"
+                            placeholder="Edit tracker ID if needed"
+                          />
+                          <button
+                            onClick={() => handleResendTracker(order)}
+                            disabled={isResending || isMarking}
+                            className="inline-flex items-center justify-center gap-2 rounded-md border border-[#d9c6c7] px-3 py-2 text-xs font-semibold text-[var(--maroon)] transition hover:bg-[#faf3f3] disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {isResending ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Pencil className="h-3 w-3" />
+                            )}
+                            {isResending ? 'Resending...' : 'Update & Resend Tracker'}
+                          </button>
+                          <button
+                            onClick={() => handleMarkDelivered(order)}
+                            disabled={isResending || isMarking}
+                            className="inline-flex items-center justify-center gap-2 rounded-md bg-[var(--maroon)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--maroon-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {isMarking ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <CheckCircle className="h-4 w-4" />
+                            )}
+                            {isMarking ? 'Marking...' : 'Mark Delivered'}
+                          </button>
+                          <p className="text-xs text-slate-500">
+                            Dispatched: {formatDateTime(order.dispatchedAt)}
+                          </p>
+                        </div>
+                      ) : order.status === 'delivered' ? (
+                        <div className="flex w-full flex-col gap-2 xl:min-w-[220px] xl:w-auto">
+                          <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                            <p className="flex items-center gap-1 font-semibold">
+                              <CheckCircle className="h-4 w-4" /> Delivered
+                            </p>
+                            {order.dispatchedAt ? (
+                              <p className="mt-1 text-xs">
+                                Dispatched: {formatDateTime(order.dispatchedAt)}
+                              </p>
+                            ) : null}
+                          </div>
+                          <input
+                            value={trackerDrafts[order.razorpayOrderId] ?? order.trackerId ?? ''}
+                            onChange={(event) =>
+                              handleTrackerDraft(order.razorpayOrderId, event.target.value)
+                            }
+                            disabled={anyActionLoading}
+                            className="rounded-md border border-[#dac6c7] px-3 py-2 text-sm outline-none ring-[var(--maroon)]/25 transition focus:ring disabled:opacity-60"
+                            placeholder="Edit tracker ID if needed"
+                          />
+                          <button
+                            onClick={() => handleResendTracker(order)}
+                            disabled={isResending}
+                            className="inline-flex items-center justify-center gap-2 rounded-md border border-[#d9c6c7] px-3 py-2 text-xs font-semibold text-[var(--maroon)] transition hover:bg-[#faf3f3] disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {isResending ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Pencil className="h-3 w-3" />
+                            )}
+                            {isResending ? 'Resending...' : 'Update & Resend Tracker'}
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  </article>
+                )
+              })}
             </div>
           )}
         </section>

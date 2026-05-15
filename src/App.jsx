@@ -11,6 +11,7 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import ShippingPolicyPage from './pages/ShippingPolicyPage'
 import TermsPage from './pages/TermsPage'
 
+
 function App() {
   return (
     <Routes>

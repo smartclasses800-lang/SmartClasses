@@ -441,8 +441,15 @@ function CheckoutPage() {
                 successful.
               </p>
               <p className="mt-4 text-sm text-slate-700">
-                If you do not receive confirmation email, call {supportPhone} or email
-                {supportEmail}.
+                If you do not receive confirmation email, call{' '}
+                <a href={`tel:${supportPhone.replace(/\s+/g, '')}`} className="font-semibold text-[var(--maroon)] hover:underline">
+                  {supportPhone}
+                </a>{' '}
+                or email{' '}
+                <a href={`mailto:${supportEmail}`} className="font-semibold text-[var(--maroon)] hover:underline">
+                  {supportEmail}
+                </a>
+                .
               </p>
             </article>
           </aside>

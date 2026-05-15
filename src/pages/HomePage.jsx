@@ -120,7 +120,7 @@ function HomePage() {
           <p className="text-sm font-semibold uppercase tracking-widest text-[var(--gold)]">
             Pricing & Purchase
           </p>
-          <h2 className="title-font mt-3 text-4xl font-bold text-[var(--maroon)]">Rs. 699</h2>
+          <h2 className="title-font mt-3 text-4xl font-bold text-[var(--maroon)]">Rs. 650</h2>
           <p className="mt-3 text-slate-700">
             One-time purchase with full access to the latest 2026 edition.
           </p>
@@ -168,6 +168,19 @@ function HomePage() {
           </div>
         </div>
       </section>
+        {/* Floating WhatsApp button */}
+        <a
+          href={`https://wa.me/918054643829?text=${encodeURIComponent('Hello, I need help with my order')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Chat on WhatsApp"
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition hover:bg-[#1ebe57]"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor" aria-hidden>
+            <path d="M20.52 3.48A11.92 11.92 0 0012.03.5C6.06.5 1.17 5.39 1.17 11.36c0 2.01.53 3.97 1.54 5.69L.5 23.5l6.72-2.02a12.04 12.04 0 005.32 1.2h.01c6 0 10.89-4.89 10.89-10.86 0-2.92-1.14-5.66-3.22-7.34zM12.03 21.5c-1.63 0-3.23-.44-4.63-1.27l-.33-.19-3.99 1.2 1.22-3.87-.21-.36A8.87 8.87 0 013.17 11.36c0-4.94 4.02-8.96 8.86-8.96 2.37 0 4.6.92 6.28 2.6 1.67 1.67 2.6 3.9 2.6 6.28 0 4.94-4.02 8.96-8.86 8.96z" />
+            <path d="M17.35 14.14c-.29-.15-1.71-.84-1.97-.94-.26-.1-.45-.15-.64.15-.19.29-.74.94-.9 1.13-.16.19-.32.21-.6.07-.29-.15-1.23-.45-2.34-1.44-.87-.77-1.46-1.72-1.63-2-.17-.29-.02-.45.12-.6.12-.12.29-.32.44-.48.15-.16.19-.26.29-.43.1-.16.04-.31-.02-.48-.06-.16-.64-1.55-.88-2.13-.23-.56-.46-.48-.64-.49l-.55-.01c-.19 0-.5.07-.76.36-.26.29-1 1-1 2.45 0 1.45 1.03 2.86 1.17 3.06.15.19 2.02 3.1 4.9 4.35 2.88 1.26 2.88.84 3.4.79.52-.05 1.71-.7 1.95-1.38.24-.68.24-1.26.17-1.38-.07-.12-.26-.19-.55-.34z" fill="#fff" />
+          </svg>
+        </a>
     </SiteShell>
   )
 }

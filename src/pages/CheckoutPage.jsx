@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import SiteShell from '../components/SiteShell'
@@ -7,7 +7,6 @@ import { loadRazorpayScript } from '../lib/razorpay'
 
 const supportPhone = import.meta.env.VITE_SUPPORT_PHONE || '+91 85588 00797'
 const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'illamerpunjab@gmail.com'
-const bookPriceInPaise = Number(import.meta.env.VITE_BOOK_PRICE_INR || 69900)
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
 const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID || ''
 
@@ -51,7 +50,7 @@ function CheckoutPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const formattedPrice = useMemo(() => `Rs. ${(bookPriceInPaise / 100).toFixed(0)}`, [])
+  const formattedPrice = 'Rs. 699'
 
   const updateField = (event) => {
     const { name, value } = event.target
@@ -95,7 +94,6 @@ function CheckoutPage() {
         product: {
           sku: 'illam-e-punjab-book',
           title: 'ILLAM-E-PUNJAB',
-          amount: bookPriceInPaise,
           quantity: 1,
         },
       }

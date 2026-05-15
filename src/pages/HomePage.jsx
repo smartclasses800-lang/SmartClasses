@@ -52,7 +52,7 @@ function HomePage() {
               Buy Now
             </Link>
             <span className="inline-flex w-fit items-center gap-2 rounded-full bg-[var(--gold)]/20 px-3 py-1 text-sm font-semibold text-[var(--maroon)]">
-              <CircleCheckBig className="h-4 w-4" /> Paperback | 341 pages | 2025-2026 editions
+              <CircleCheckBig className="h-4 w-4" /> Paperback | 390 pages | 2025-2026 editions
             </span>
           </div>
         </div>

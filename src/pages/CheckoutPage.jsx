@@ -223,7 +223,7 @@ function CheckoutPage() {
     <SiteShell>
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-          <article className="rounded-2xl border border-[#ead7d7] bg-white p-6 shadow-sm sm:p-8">
+          <article className="rounded-3xl border border-[#ead7d7] bg-white/95 p-6 shadow-[0_22px_60px_-28px_rgba(123,24,27,0.28)] backdrop-blur sm:p-8">
             <h1 className="title-font text-3xl font-bold text-[var(--maroon)] sm:text-4xl">
               Checkout Details
             </h1>
@@ -234,7 +234,7 @@ function CheckoutPage() {
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               <div className="grid gap-5 sm:grid-cols-2">
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                   Full Name
                   <input
                     name="fullName"
@@ -245,7 +245,7 @@ function CheckoutPage() {
                     placeholder="Enter full name"
                   />
                 </label>
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                   Email ID
                   <input
                     name="email"
@@ -260,7 +260,7 @@ function CheckoutPage() {
               </div>
 
               <div className="grid gap-5 sm:grid-cols-2">
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                   Phone Number
                   <input
                     name="phone"
@@ -275,7 +275,7 @@ function CheckoutPage() {
                 </label>
 
                 <fieldset className="rounded-md border border-[#dac6c7] px-3 py-2">
-                  <legend className="px-1 text-sm font-semibold text-slate-700">
+                  <legend className="px-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                     Book Language Medium
                   </legend>
                   <div className="mt-1 flex flex-col gap-1 text-sm text-slate-700">
@@ -303,7 +303,7 @@ function CheckoutPage() {
                 </fieldset>
               </div>
 
-              <label className="block text-sm font-semibold text-slate-700">
+              <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                 Flat / House No. / Building Name
                 <input
                   name="addressLine1"
@@ -314,7 +314,7 @@ function CheckoutPage() {
                 />
               </label>
 
-              <label className="block text-sm font-semibold text-slate-700">
+              <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                 Area / Street / Locality
                 <input
                   name="addressLine2"
@@ -326,7 +326,7 @@ function CheckoutPage() {
               </label>
 
               <div className="grid gap-5 sm:grid-cols-2">
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                   Landmark (optional)
                   <input
                     name="landmark"
@@ -335,7 +335,7 @@ function CheckoutPage() {
                     className="mt-1 w-full rounded-md border border-[#dac6c7] px-3 py-2 outline-none ring-[var(--maroon)]/25 transition focus:ring"
                   />
                 </label>
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                   District
                   <input
                     name="district"
@@ -348,7 +348,7 @@ function CheckoutPage() {
               </div>
 
               <div className="grid gap-5 sm:grid-cols-3">
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                   City / Town
                   <input
                     name="city"
@@ -358,7 +358,7 @@ function CheckoutPage() {
                     className="mt-1 w-full rounded-md border border-[#dac6c7] px-3 py-2 outline-none ring-[var(--maroon)]/25 transition focus:ring"
                   />
                 </label>
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                   State
                   <input
                     name="state"
@@ -381,7 +381,7 @@ function CheckoutPage() {
                 </label>
               </div>
 
-              <label className="block text-sm font-semibold text-slate-700">
+              <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                 Country
                 <input
                   name="country"
@@ -401,15 +401,25 @@ function CheckoutPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex w-full items-center justify-center rounded-md bg-[var(--maroon)] px-6 py-3 text-base font-semibold text-white transition hover:bg-[var(--maroon-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center rounded-xl px-6 py-4 text-base font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+                style={{
+                  background: 'linear-gradient(135deg, #9b1e22 0%, #7b181b 50%, #5a1013 100%)',
+                  boxShadow: '0 8px 24px -4px rgba(123,24,27,0.45), 0 0 0 1px rgba(123,24,27,0.2)',
+                }}
               >
                 {loading ? 'Initializing Payment...' : `Proceed to Razorpay (${formattedPrice})`}
               </button>
             </form>
           </article>
 
-          <aside className="space-y-5">
-            <article className="rounded-2xl border border-[#ebdfe0] bg-white p-6 shadow-sm">
+          <aside className="order-first space-y-5 lg:order-last lg:sticky lg:top-24 lg:self-start">
+            <article
+              className="rounded-2xl p-6 shadow-lg"
+              style={{
+                background: 'linear-gradient(135deg, #fffdf7 0%, #fef8ec 100%)',
+                border: '1.5px solid #f0d898',
+              }}
+            >
               <h2 className="title-font text-2xl font-bold text-[var(--maroon)]">
                 Order Summary
               </h2>

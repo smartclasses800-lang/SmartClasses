@@ -6,7 +6,7 @@ const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'illamerpunjab@gmail.
 function SiteShell({ children }) {
   return (
     <div className="text-[var(--ink)]">
-      <header className="sticky top-0 z-40 border-b border-[#eadfdf] bg-white/95 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-[#ecdede]/60 bg-white/80 shadow-sm backdrop-blur-md">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <Link
             to="/"
@@ -16,7 +16,11 @@ function SiteShell({ children }) {
           </Link>
           <Link
             to="/checkout"
-            className="rounded-md bg-[var(--maroon)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--maroon-hover)]"
+            className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
+            style={{
+              background: 'linear-gradient(135deg, #9b1e22 0%, #7b181b 50%, #5a1013 100%)',
+              boxShadow: '0 8px 24px -4px rgba(123,24,27,0.35), 0 0 0 1px rgba(123,24,27,0.18)',
+            }}
           >
             Buy Now
           </Link>
@@ -25,7 +29,7 @@ function SiteShell({ children }) {
 
       <main>{children}</main>
 
-      <footer className="border-t border-[#ebdfdf] bg-white">
+      <footer className="border-t border-[#ebdfdf] bg-white/95">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="mb-5 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-slate-600">
             <Link to="/privacy-policy" className="hover:text-[var(--maroon)]">

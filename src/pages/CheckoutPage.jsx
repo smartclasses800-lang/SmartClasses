@@ -50,7 +50,28 @@ function CheckoutPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const formattedPrice = 'Rs. 699'
+  const [formattedPrice, setFormattedPrice] = useState('Rs. 699')
+
+  useEffect(() => {
+    let mounted = true
+    async function loadPrice() {
+      if (!apiBaseUrl) return
+      try {
+        const resp = await fetch(`${apiBaseUrl}/products/illam-e-punjab-book`)
+        if (!resp.ok) return
+        const json = await resp.json()
+        if (!mounted) return
+        const p = json.pricePaise || 69900
+        setFormattedPrice(`Rs. ${(p / 100).toFixed(0)}`)
+      } catch (e) {
+        // ignore and keep default
+      }
+    }
+    loadPrice()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const updateField = (event) => {
     const { name, value } = event.target

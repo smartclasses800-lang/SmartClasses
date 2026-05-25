@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { AlertTriangle, CheckCircle2 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { AlertTriangle, BookOpen, CheckCircle2, Star } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import SiteShell from '../components/SiteShell'
 import { savePendingOrder } from '../lib/orderStore'
 import { loadRazorpayScript } from '../lib/razorpay'
@@ -9,8 +9,21 @@ const supportPhone = import.meta.env.VITE_SUPPORT_PHONE || '+91 85588 00797'
 const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'illamerpunjab@gmail.com'
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
 const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID || ''
+const SELECTED_BOOK_KEY = 'selectedBookData'
 
 const STORAGE_KEY = 'checkoutFormData'
+
+const defaultBook = {
+  sku: 'illam-e-punjab-book',
+  title: 'ILLAM-E-PUNJAB',
+  author: 'Smart Book Store',
+  uri: '/book.webp',
+  description: 'The active book catalog entry currently configured for direct payment.',
+  pages: 0,
+  bilangual: false,
+  onlyEnglish: true,
+  onpunjabi: false,
+}
 
 const initialFormState = {
   fullName: '',
@@ -40,8 +53,50 @@ function getSavedFormState() {
   return initialFormState
 }
 
+function getSavedBookState() {
+  try {
+    const raw = sessionStorage.getItem(SELECTED_BOOK_KEY)
+    if (raw) {
+      return { ...defaultBook, ...JSON.parse(raw) }
+    }
+  } catch {
+    // ignore parse errors
+  }
+
+  return defaultBook
+}
+
+function formatPriceLabel(value) {
+  const amount = Number(value)
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 'Rs. 699'
+  }
+
+  return `Rs. ${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount)}`
+}
+
+function getLanguageBadges(book) {
+  const badges = []
+
+  if (book?.bilangual || book?.bilingual) {
+    badges.push('Bilingual edition')
+  }
+
+  if (book?.onlyEnglish) {
+    badges.push('Only English')
+  }
+
+  if (book?.onpunjabi) {
+    badges.push('Punjabi focused')
+  }
+
+  return badges
+}
+
 function CheckoutPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const selectedBook = { ...getSavedBookState(), ...(location.state?.book || {}) }
   const [formData, setFormData] = useState(getSavedFormState)
 
   useEffect(() => {
@@ -57,7 +112,7 @@ function CheckoutPage() {
     async function loadPrice() {
       if (!apiBaseUrl) return
       try {
-        const resp = await fetch(`${apiBaseUrl}/products/illam-e-punjab-book`)
+        const resp = await fetch(`${apiBaseUrl}/products/${selectedBook.sku || 'illam-e-punjab-book'}`)
         if (!resp.ok) return
         const json = await resp.json()
         if (!mounted) return
@@ -71,7 +126,15 @@ function CheckoutPage() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [selectedBook.sku])
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SELECTED_BOOK_KEY, JSON.stringify(selectedBook))
+    } catch {
+      // ignore session storage errors
+    }
+  }, [selectedBook])
 
   const updateField = (event) => {
     const { name, value } = event.target
@@ -113,8 +176,8 @@ function CheckoutPage() {
           country: formData.country,
         },
         product: {
-          sku: 'illam-e-punjab-book',
-          title: 'ILLAM-E-PUNJAB',
+          sku: selectedBook.sku || 'illam-e-punjab-book',
+          title: selectedBook.title || 'ILLAM-E-PUNJAB',
           quantity: 1,
         },
       }
@@ -163,16 +226,18 @@ function CheckoutPage() {
         key: order.keyId || razorpayKeyId,
         amount: order.amount,
         currency: order.currency,
-        name: 'ILLAM-E-PUNJAB',
-        description: 'Punjab History Book Purchase',
+        name: selectedBook.title || 'ILLAM-E-PUNJAB',
+        description: selectedBook.description || 'Punjab History Book Purchase',
         order_id: order.orderId,
-        image: '/book.webp',
+        image: selectedBook.uri || '/book.webp',
         prefill: {
           name: formData.fullName,
           email: formData.email,
           contact: formData.phone,
         },
         notes: {
+          bookTitle: selectedBook.title || 'ILLAM-E-PUNJAB',
+          bookAuthor: selectedBook.author || 'Smart Book Store',
           medium: formData.medium,
           district: formData.district,
           fullShippingAddress:
@@ -221,19 +286,106 @@ function CheckoutPage() {
 
   return (
     <SiteShell>
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-          <article className="rounded-3xl border border-[#ead7d7] bg-white/95 p-6 shadow-[0_22px_60px_-28px_rgba(123,24,27,0.28)] backdrop-blur sm:p-8">
-            <h1 className="title-font text-3xl font-bold text-[var(--maroon)] sm:text-4xl">
-              Checkout Details
-            </h1>
-            <p className="mt-3 text-sm leading-6 text-slate-700 sm:text-base">
-              Fill your details exactly as required for India Post shipping. After
-              successful payment, we will send your confirmation email and tracking ID.
-            </p>
+      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-12">
+        <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:gap-8">
+          <article className="overflow-hidden rounded-[2rem] border border-[#dfd1d2] bg-white/95 shadow-[0_24px_70px_-34px_rgba(123,24,27,0.3)] backdrop-blur">
+            <div
+              className="border-b border-[#ecdcdc] px-5 py-5 sm:px-8"
+              style={{ background: 'linear-gradient(135deg, #fffdfb 0%, #fff4f4 100%)' }}
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8d6a6c]">
+                Selected Book
+              </p>
+              <div className="mt-4 grid gap-5 xl:grid-cols-[260px_1fr] xl:items-start">
+                <div className="mx-auto w-full max-w-[180px] overflow-hidden rounded-[1.6rem] border border-[#e8d7d8] bg-[#fbf4f4] shadow-[0_16px_40px_-28px_rgba(123,24,27,0.35)] sm:max-w-[210px] xl:max-w-none">
+                  <img
+                    src={selectedBook.uri || '/book.webp'}
+                    alt={selectedBook.title}
+                    className="aspect-[2/3] w-full object-cover"
+                  />
+                </div>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="space-y-3">
+                  <p className="title-font text-3xl font-bold tracking-tight text-[var(--maroon)] sm:text-4xl">
+                    {selectedBook.title}
+                  </p>
+                  <p className="mt-2 text-base text-slate-600">
+                    by <span className="font-semibold text-slate-900">{selectedBook.author}</span>
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {getLanguageBadges(selectedBook).map((badge) => (
+                      <span
+                        key={badge}
+                        className="inline-flex items-center rounded-full border border-[#ecd0d1] bg-white px-3 py-1 text-xs font-semibold text-[var(--maroon)]"
+                      >
+                        {badge}
+                      </span>
+                    ))}
+                    <span className="inline-flex items-center rounded-full border border-[#ecd0d1] bg-white px-3 py-1 text-xs font-semibold text-[var(--maroon)]">
+                      {selectedBook.pages ? `${selectedBook.pages} pages` : 'Curated edition'}
+                    </span>
+                  </div>
+
+                  <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-700 sm:text-base">
+                    {selectedBook.description || 'This selected book is preloaded from the home page and ready for direct Razorpay checkout.'}
+                  </p>
+
+                  <div className="grid gap-3 sm:grid-cols-3 xl:hidden">
+                    <div className="rounded-2xl border border-[#eadede] bg-white p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        Price
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-900">{formattedPrice}</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#eadede] bg-white p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        Payment
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-900">Razorpay</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#eadede] bg-white p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        Support
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-900">Phone + email</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 hidden gap-3 sm:grid-cols-3 xl:grid">
+                    <div className="rounded-2xl border border-[#eadede] bg-white p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        Payment Mode
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-900">Direct Razorpay</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#eadede] bg-white p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        Shipping
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-900">India Post</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#eadede] bg-white p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        Support
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-900">Email + phone follow-up</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 sm:p-8">
+              <div className="rounded-[1.6rem] border border-[#f0e1e2] bg-[#fffaf7] p-5 sm:p-6">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[var(--maroon)]">
+                  <Star className="h-4 w-4" />
+                  Direct checkout is ready. Fill the delivery details below and continue to payment.
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                   Full Name
                   <input
@@ -257,9 +409,9 @@ function CheckoutPage() {
                     placeholder="name@example.com"
                   />
                 </label>
-              </div>
+                </div>
 
-              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                   Phone Number
                   <input
@@ -301,9 +453,9 @@ function CheckoutPage() {
                     </label>
                   </div>
                 </fieldset>
-              </div>
+                </div>
 
-              <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                 Flat / House No. / Building Name
                 <input
                   name="addressLine1"
@@ -314,7 +466,7 @@ function CheckoutPage() {
                 />
               </label>
 
-              <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                 Area / Street / Locality
                 <input
                   name="addressLine2"
@@ -325,7 +477,7 @@ function CheckoutPage() {
                 />
               </label>
 
-              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                   Landmark (optional)
                   <input
@@ -345,9 +497,9 @@ function CheckoutPage() {
                     className="mt-1 w-full rounded-md border border-[#dac6c7] px-3 py-2 outline-none ring-[var(--maroon)]/25 transition focus:ring"
                   />
                 </label>
-              </div>
+                </div>
 
-              <div className="grid gap-5 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-3">
                 <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                   City / Town
                   <input
@@ -379,9 +531,9 @@ function CheckoutPage() {
                     className="mt-1 w-full rounded-md border border-[#dac6c7] px-3 py-2 outline-none ring-[var(--maroon)]/25 transition focus:ring"
                   />
                 </label>
-              </div>
+                </div>
 
-              <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                <label className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                 Country
                 <input
                   name="country"
@@ -392,66 +544,107 @@ function CheckoutPage() {
                 />
               </label>
 
-              {error ? (
-                <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                  {error}
-                </p>
-              ) : null}
+                {error ? (
+                  <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {error}
+                  </p>
+                ) : null}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex w-full items-center justify-center rounded-xl px-6 py-4 text-base font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
-                style={{
-                  background: 'linear-gradient(135deg, #9b1e22 0%, #7b181b 50%, #5a1013 100%)',
-                  boxShadow: '0 8px 24px -4px rgba(123,24,27,0.45), 0 0 0 1px rgba(123,24,27,0.2)',
-                }}
-              >
-                {loading ? 'Initializing Payment...' : `Proceed to Razorpay (${formattedPrice})`}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="inline-flex w-full items-center justify-center rounded-2xl px-6 py-4 text-base font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{
+                    background: 'linear-gradient(135deg, #9b1e22 0%, #7b181b 50%, #5a1013 100%)',
+                    boxShadow: '0 8px 24px -4px rgba(123,24,27,0.45), 0 0 0 1px rgba(123,24,27,0.2)',
+                  }}
+                >
+                  {loading ? 'Initializing Payment...' : `Proceed to Razorpay (${formattedPrice})`}
+                </button>
+              </form>
+
+              <div className="mt-5 text-center text-xs leading-5 text-slate-500 lg:hidden">
+                Need help? Call{' '}
+                <a href={`tel:${supportPhone.replace(/\s+/g, '')}`} className="font-semibold text-[var(--maroon)] hover:underline">
+                  {supportPhone}
+                </a>{' '}
+                or email{' '}
+                <a href={`mailto:${supportEmail}`} className="font-semibold text-[var(--maroon)] hover:underline">
+                  {supportEmail}
+                </a>
+                .
+              </div>
+            </div>
           </article>
 
-          <aside className="order-first space-y-5 lg:order-last lg:sticky lg:top-24 lg:self-start">
+          <aside className="order-first hidden space-y-5 lg:order-last lg:block lg:sticky lg:top-24 lg:self-start">
             <article
-              className="rounded-2xl p-6 shadow-lg"
+              className="overflow-hidden rounded-[2rem] border border-[#cbdde8] bg-white p-6 shadow-[0_18px_50px_-26px_rgba(15,91,130,0.38)]"
               style={{
-                background: 'linear-gradient(135deg, #fffdf7 0%, #fef8ec 100%)',
-                border: '1.5px solid #f0d898',
+                background: 'linear-gradient(180deg, #ffffff 0%, #f7fbfe 100%)',
               }}
             >
-              <h2 className="title-font text-2xl font-bold text-[var(--maroon)]">
-                Order Summary
-              </h2>
-              <div className="mt-4 space-y-2 text-sm text-slate-700">
-                <p className="flex items-center justify-between">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#edf7fb] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#0f5b82]">
+                <BookOpen className="h-3.5 w-3.5" />
+                Buy Now
+              </div>
+              <div className="mt-5 flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">from</p>
+                  <p className="title-font text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                    {formattedPrice}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[#dcecf4] bg-[#f7fbfe] px-3 py-2 text-right">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Secure payment
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">Razorpay checkout</p>
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-3 rounded-[1.5rem] border border-[#dcecf4] bg-[#fafdff] p-4 text-sm text-slate-700">
+                <div className="flex items-center justify-between gap-4">
                   <span>Book</span>
-                  <span className="font-semibold">ILLAM-E-PUNJAB</span>
-                </p>
-                <p className="flex items-center justify-between">
-                  <span>Price</span>
-                  <span className="font-semibold">{formattedPrice}</span>
-                </p>
-                <p className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-900">{selectedBook.title}</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span>Author</span>
+                  <span className="font-semibold text-slate-900">{selectedBook.author}</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span>Language</span>
+                  <span className="font-semibold text-slate-900">
+                    {getLanguageBadges(selectedBook)[0] || 'Standard edition'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
                   <span>Shipping</span>
-                  <span className="font-semibold">India Post</span>
+                  <span className="font-semibold text-slate-900">India Post</span>
+                </div>
+                <div className="flex items-center justify-between gap-4 border-t border-[#dcecf4] pt-3">
+                  <span className="font-medium text-slate-500">Gateway amount</span>
+                  <span className="font-semibold text-[#0f5b82]">{formattedPrice}</span>
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-[1.5rem] border border-[#ebdfe0] bg-[#fffaf0] p-4">
+                <p className="flex items-start gap-2 text-sm font-semibold text-[var(--maroon)]">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+                  After payment confirmation, a confirmation email and shipment tracker ID
+                  will be sent to your registered email.
+                </p>
+                <p className="mt-4 flex items-start gap-2 text-sm font-semibold text-[var(--maroon)]">
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+                  Strict policy: All purchases are non-refundable once payment is
+                  successful.
                 </p>
               </div>
             </article>
 
-            <article className="rounded-2xl border border-[#ebdfe0] bg-[#fffaf0] p-6 shadow-sm">
-              <p className="flex items-start gap-2 text-sm font-semibold text-[var(--maroon)]">
-                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
-                After payment confirmation, a confirmation email and shipment tracker ID
-                will be sent to your registered email.
-              </p>
-              <p className="mt-4 flex items-start gap-2 text-sm font-semibold text-[var(--maroon)]">
-                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-                Strict policy: All purchases are non-refundable once payment is
-                successful.
-              </p>
-              <p className="mt-4 text-sm text-slate-700">
-                If you do not receive confirmation email, call{' '}
+            <article className="rounded-[2rem] border border-[#e8dfe0] bg-white p-6 shadow-[0_16px_45px_-30px_rgba(123,24,27,0.3)]">
+              <p className="text-sm font-semibold text-[var(--maroon)]">
+                If you do not receive the confirmation email, call{' '}
                 <a href={`tel:${supportPhone.replace(/\s+/g, '')}`} className="font-semibold text-[var(--maroon)] hover:underline">
                   {supportPhone}
                 </a>{' '}

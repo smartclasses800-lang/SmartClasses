@@ -4,32 +4,65 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import SiteShell from '../components/SiteShell'
 import homebannerbg from '../assets/banner.jpeg'
 
+const SELECTED_BOOK_KEY = 'selectedBookData'
+
 // Top Sellers Book Data directly matching the live catalog
 const topSellers = [
-  { title: 'Illami Punjab', author: 'Rebecca Yarros', cover: '/covers/fourth-wing.jpg' },
-  { title: 'Punjabi Bhasha Ate Vyakaran', author: 'Charlie Kirk', cover: '/covers/stop-god.jpg' },
-  { title: 'Punjab Police Constable 2026 District & Armed Cadre', author: 'Allen Levi', cover: '/covers/theo.jpg' },
-  // { title: 'The Let Them Theory', author: 'Mel Robbins', cover: '/covers/let-them.jpg' },
-  // { title: 'Sunrise on the Reaping', author: 'Suzanne Collins', cover: '/covers/sunrise.jpg' },
-  // { title: 'Patriot', author: 'Alexei Navalny', cover: '/covers/patriot.jpg' },
-  // { title: 'Melania', author: 'Melania Trump', cover: '/covers/melania.jpg' },
-  // { title: 'Original Sin', author: 'Jake Tapper, Alex Thompson', cover: '/covers/original-sin.jpg' },
-  // { title: 'The Idaho Four', author: 'James Patterson, Vicky Ward', cover: '/covers/idaho-four.jpg' },
-  // { title: 'Framed', author: 'John Grisham, Jim McCloskey', cover: '/covers/framed.jpg' }
+  {
+    sku: 'illam-e-punjab-book',
+    title: 'Illami Punjab',
+    author: 'Rebecca Yarros',
+    cover: '/assets/demo.jpg',
+    pages: 320,
+    price: 299,
+    description:
+      'A gripping tale of love and resilience set in the heart of Punjab, where tradition meets modernity.',
+    uri: 'https://illamipunjabmcp.vercel.app/book.webp',
+    bilangual: true,
+    onlyEnglish: false,
+    onpunjabi: false,
+  },
+  {
+    sku: 'illam-e-punjab-book',
+    title: 'Punjabi Bhasha Ate Vyakaran',
+    author: 'Charlie Kirk',
+    cover: '/assets/demo.jpg',
+    pages: 250,
+    price: 199,
+    description:
+      'A comprehensive guide to Punjabi language and grammar, perfect for students and language enthusiasts.',
+    uri: 'https://i.ibb.co/FqWzjWQN/book.jpg',
+    bilangual: true,
+    onlyEnglish: false,
+    onpunjabi: false,
+  },
+  {
+    sku: 'illam-e-punjab-book',
+    title: 'Punjab Police Constable 2026 District & Armed Cadre',
+    author: 'Allen Levi',
+    cover: '/assets/demo.jpg',
+    pages: 300,
+    price: 249,
+    description:
+      'A comprehensive guide to the Punjab Police Constable exam, covering all important topics and practice questions.',
+    uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXLd0s6lxmSBqEUfKQI68Z7AG6zU2c0Nu44g&s',
+    bilangual: false,
+    onlyEnglish: true,
+    onpunjabi: false,
+  },
 ]
 
-// Textbook Best Sellers Data matching the live catalog
-const textbookSellers = [
-  { title: 'Substance Use Counseling: Theory And Practice', author: 'Stevens', cover: '/covers/substance.jpg' },
-  { title: 'When The Light Finds Us From A Life Sentence To A Life Transformed', author: 'Unknown', cover: '/covers/light.jpg' },
-  { title: 'Heating, Cooling, Lighting Sustainable Design Strategies', author: 'Lechner', cover: '/covers/heating.jpg' },
-  { title: 'Acceptance And Commitment Therapy', author: 'Hayes', cover: '/covers/acceptance.jpg' },
-  { title: 'Forensic Analytics Methods And Techniques', author: 'Nigrini', cover: '/covers/forensic.jpg' }
-]
 
 function HomePage() {
   const topSellersRef = useRef(null)
-  const textbooksRef = useRef(null)
+
+  const handleBookSelect = (book) => {
+    try {
+      sessionStorage.setItem(SELECTED_BOOK_KEY, JSON.stringify(book))
+    } catch {
+      // ignore session storage errors
+    }
+  }
 
   // Scroll function for carousels
   const scroll = (ref, direction) => {
@@ -71,7 +104,7 @@ function HomePage() {
         {/* 2. Top Sellers Section */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Top sellers</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">All Books</h2>
             <div className="flex gap-2">
               <button 
                 onClick={() => scroll(topSellersRef, 'left')}
@@ -93,13 +126,28 @@ function HomePage() {
             className="flex gap-4 overflow-x-auto scrollbar-none pb-4 snap-x snap-mandatory"
           >
             {topSellers.map((book, index) => (
-              <div key={index} className="w-[140px] sm:w-[170px] shrink-0 snap-start group cursor-pointer">
-                <div className="aspect-[2/3] w-full rounded-md bg-gray-100 border border-gray-200 overflow-hidden shadow-sm group-hover:shadow-md transition">
-                  <img src={book.cover} alt={book.title} className="w-full h-full object-cover" />
+              <Link
+                key={index}
+                to="/checkout"
+                state={{ book }}
+                onClick={() => handleBookSelect(book)}
+                className="w-[140px] shrink-0 snap-start group sm:w-[200px]"
+              >
+                <div className="overflow-hidden rounded-[0.625rem] border border-[#d9e6ef] bg-white shadow-[0_10px_30px_-18px_rgba(15,91,130,0.45)] transition duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_18px_40px_-18px_rgba(15,91,130,0.55)]">
+                  <div className="aspect-[2/3] w-full overflow-hidden bg-[#f3f7fb]">
+                    <img src={book.uri} alt={book.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
+                  </div>
+                  <div className="border-t border-[#e3edf5] p-3">
+                    <h3 className="text-xs font-bold text-gray-800 line-clamp-1 group-hover:text-[#0f5b82]">
+                      {book.title}
+                    </h3>
+                    <p className="mt-0.5 text-[11px] text-gray-500 line-clamp-1">by {book.author}</p>
+                    <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#0f5b82]">
+                      View &amp; Pay
+                    </p>
+                  </div>
                 </div>
-                <h3 className="mt-2 text-xs font-bold text-gray-800 line-clamp-1 group-hover:underline">{book.title}</h3>
-                <p className="text-[11px] text-gray-500 line-clamp-1">by {book.author}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

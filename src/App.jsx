@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AdminProtectedRoute from './components/AdminProtectedRoute'
 import AdminDashboardPage from './pages/AdminDashboardPage'
+import AdminBooksPage from './pages/AdminBooksPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import CancellationRefundPage from './pages/CancellationRefundPage'
 import CheckoutPage from './pages/CheckoutPage'
@@ -30,6 +31,14 @@ function App() {
         element={
           <AdminProtectedRoute>
             <AdminDashboardPage />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/books"
+        element={
+          <AdminProtectedRoute>
+            <AdminBooksPage />
           </AdminProtectedRoute>
         }
       />

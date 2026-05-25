@@ -1,60 +1,16 @@
-import React, { useRef } from 'react'
+import React, { useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import SiteShell from '../components/SiteShell'
 import homebannerbg from '../assets/banner.jpeg'
+import { loadBooks } from '../lib/bookCatalog'
 
 const SELECTED_BOOK_KEY = 'selectedBookData'
-
-// Top Sellers Book Data directly matching the live catalog
-const topSellers = [
-  {
-    sku: 'illam-e-punjab-book',
-    title: 'Illami Punjab',
-    author: 'Rebecca Yarros',
-    cover: '/assets/demo.jpg',
-    pages: 320,
-    price: 299,
-    description:
-      'A gripping tale of love and resilience set in the heart of Punjab, where tradition meets modernity.',
-    uri: 'https://illamipunjabmcp.vercel.app/book.webp',
-    bilangual: true,
-    onlyEnglish: false,
-    onpunjabi: false,
-  },
-  {
-    sku: 'illam-e-punjab-book',
-    title: 'Punjabi Bhasha Ate Vyakaran',
-    author: 'Charlie Kirk',
-    cover: '/assets/demo.jpg',
-    pages: 250,
-    price: 199,
-    description:
-      'A comprehensive guide to Punjabi language and grammar, perfect for students and language enthusiasts.',
-    uri: 'https://i.ibb.co/FqWzjWQN/book.jpg',
-    bilangual: true,
-    onlyEnglish: false,
-    onpunjabi: false,
-  },
-  {
-    sku: 'illam-e-punjab-book',
-    title: 'Punjab Police Constable 2026 District & Armed Cadre',
-    author: 'Allen Levi',
-    cover: '/assets/demo.jpg',
-    pages: 300,
-    price: 249,
-    description:
-      'A comprehensive guide to the Punjab Police Constable exam, covering all important topics and practice questions.',
-    uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXLd0s6lxmSBqEUfKQI68Z7AG6zU2c0Nu44g&s',
-    bilangual: false,
-    onlyEnglish: true,
-    onpunjabi: false,
-  },
-]
 
 
 function HomePage() {
   const topSellersRef = useRef(null)
+  const topSellers = useMemo(() => loadBooks(), [])
 
   const handleBookSelect = (book) => {
     try {

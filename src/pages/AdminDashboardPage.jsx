@@ -6,6 +6,7 @@ import {
   ClipboardList,
   CreditCard,
   ExternalLink,
+  BookOpen,
   Loader2,
   LogOut,
   PackageCheck,
@@ -218,6 +219,12 @@ function AdminDashboardPage() {
               >
                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
               </button>
+              <Link
+                to="/admin/books"
+                className="inline-flex items-center gap-2 rounded-md border border-[#e0cfcf] px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                <BookOpen className="h-4 w-4" /> Show Books
+              </Link>
               <Link
                 to="/"
                 className="rounded-md border border-[#e0cfcf] px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"

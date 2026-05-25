@@ -335,6 +335,12 @@ function AdminDashboardPage() {
                       <div className="space-y-1 text-sm text-slate-700">
                         <p className="font-semibold text-slate-900">{order.customer.fullName}</p>
                         <p>{order.customer.email} | {order.customer.phone}</p>
+                        <p>
+                          Book: <span className="font-semibold text-slate-900">{order.product?.title || 'N/A'}</span>
+                        </p>
+                        <p>
+                          SKU: <span className="font-mono text-slate-900">{order.product?.sku || 'N/A'}</span>
+                        </p>
                         <p>Payment ID: {order.payment?.razorpayPaymentId || 'N/A'}</p>
                         <p>Amount: Rs. {(Number(order.amount || 0) / 100).toFixed(0)}</p>
                         <p>Medium: {order.customer.medium}</p>

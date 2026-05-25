@@ -4,10 +4,11 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import SiteShell from '../components/SiteShell'
 import { savePendingOrder } from '../lib/orderStore'
 import { loadRazorpayScript } from '../lib/razorpay'
+import { fetchBookBySku, fetchBooks } from '../lib/booksApi'
 
 const supportPhone = import.meta.env.VITE_SUPPORT_PHONE || '+91 85588 00797'
 const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'illamerpunjab@gmail.com'
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
 const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID || ''
 const SELECTED_BOOK_KEY = 'selectedBookData'
 
@@ -96,7 +97,8 @@ function getLanguageBadges(book) {
 function CheckoutPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const selectedBook = { ...getSavedBookState(), ...(location.state?.book || {}) }
+  const initialBook = { ...getSavedBookState(), ...(location.state?.book || {}) }
+  const [selectedBook, setSelectedBook] = useState(initialBook)
   const [formData, setFormData] = useState(getSavedFormState)
 
   useEffect(() => {
@@ -105,28 +107,76 @@ function CheckoutPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const [formattedPrice, setFormattedPrice] = useState('Rs. 699')
+  const [formattedPrice, setFormattedPrice] = useState('')
+
+  useEffect(() => {
+    let active = true
+
+    async function loadBookFromServer() {
+      try {
+        if (selectedBook?.sku) {
+          const liveBook = await fetchBookBySku(selectedBook.sku)
+          if (active && liveBook) {
+            setSelectedBook((prev) => ({ ...prev, ...liveBook }))
+            return
+          }
+        }
+
+        if (selectedBook?.title) {
+          const books = await fetchBooks()
+          const matchedBook = books.find(
+            (book) => String(book.title || '').toLowerCase() === String(selectedBook.title || '').toLowerCase(),
+          )
+          if (active && matchedBook) {
+            setSelectedBook((prev) => ({ ...prev, ...matchedBook }))
+            return
+          }
+        }
+
+        const books = await fetchBooks()
+        if (active && books[0]) {
+          setSelectedBook((prev) => ({ ...prev, ...books[0] }))
+        }
+      } catch {
+        // keep the current cached book if the backend is temporarily unavailable
+      }
+    }
+
+    loadBookFromServer()
+
+    return () => {
+      active = false
+    }
+  }, [selectedBook?.sku])
 
   useEffect(() => {
     let mounted = true
     async function loadPrice() {
-      if (!apiBaseUrl) return
-      try {
-        const resp = await fetch(`${apiBaseUrl}/products/${selectedBook.sku || 'illam-e-punjab-book'}`)
-        if (!resp.ok) return
-        const json = await resp.json()
-        if (!mounted) return
-        const p = json.pricePaise || 69900
-        setFormattedPrice(`Rs. ${(p / 100).toFixed(0)}`)
-      } catch (e) {
-        // ignore and keep default
+      const pricePaise = Number(selectedBook?.pricePaise || selectedBook?.price * 100 || 0)
+      if (!mounted) return
+      if (pricePaise > 0) {
+        setFormattedPrice(`Rs. ${(pricePaise / 100).toFixed(0)}`)
+      } else if (selectedBook?.price > 0) {
+        setFormattedPrice(`Rs. ${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(selectedBook.price)}`)
+      } else if (selectedBook?.sku) {
+        try {
+          const resp = await fetch(`${apiBaseUrl}/books/${encodeURIComponent(selectedBook.sku)}`)
+          if (!resp.ok) return
+          const json = await resp.json()
+          const livePricePaise = Number(json?.book?.pricePaise || 0)
+          if (mounted && livePricePaise > 0) {
+            setFormattedPrice(`Rs. ${(livePricePaise / 100).toFixed(0)}`)
+          }
+        } catch {
+          // ignore and keep default
+        }
       }
     }
     loadPrice()
     return () => {
       mounted = false
     }
-  }, [selectedBook.sku])
+  }, [selectedBook])
 
   useEffect(() => {
     try {
@@ -238,6 +288,7 @@ function CheckoutPage() {
         notes: {
           bookTitle: selectedBook.title || 'ILLAM-E-PUNJAB',
           bookAuthor: selectedBook.author || 'Smart Book Store',
+          bookSku: selectedBook.sku || '',
           medium: formData.medium,
           district: formData.district,
           fullShippingAddress:

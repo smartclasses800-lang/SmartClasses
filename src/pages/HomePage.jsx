@@ -1,16 +1,44 @@
-import React, { useMemo, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import SiteShell from '../components/SiteShell'
 import homebannerbg from '../assets/banner.jpeg'
-import { loadBooks } from '../lib/bookCatalog'
+import { fetchBooks } from '../lib/booksApi'
 
 const SELECTED_BOOK_KEY = 'selectedBookData'
 
 
 function HomePage() {
   const topSellersRef = useRef(null)
-  const topSellers = useMemo(() => loadBooks(), [])
+  const [topSellers, setTopSellers] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadCatalog() {
+      try {
+        const books = await fetchBooks()
+        if (active) {
+          setTopSellers(books)
+        }
+      } catch {
+        if (active) {
+          setTopSellers([])
+        }
+      } finally {
+        if (active) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadCatalog()
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   const handleBookSelect = (book) => {
     try {
@@ -81,9 +109,21 @@ function HomePage() {
             ref={topSellersRef}
             className="flex gap-4 overflow-x-auto scrollbar-none pb-4 snap-x snap-mandatory"
           >
-            {topSellers.map((book, index) => (
+            {loading ? (
+              <div className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-[#d9e6ef] bg-white px-6 py-10 text-sm text-slate-600">
+                <Loader2 className="h-4 w-4 animate-spin text-[#0f5b82]" /> Loading books...
+              </div>
+            ) : null}
+
+            {!loading && topSellers.length === 0 ? (
+              <div className="w-full rounded-2xl border border-dashed border-[#d9e6ef] bg-white px-6 py-10 text-center text-sm text-slate-600">
+                No books available yet. Please check back soon.
+              </div>
+            ) : null}
+
+            {topSellers.map((book) => (
               <Link
-                key={index}
+                key={book.sku}
                 to="/checkout"
                 state={{ book }}
                 onClick={() => handleBookSelect(book)}
@@ -98,6 +138,9 @@ function HomePage() {
                       {book.title}
                     </h3>
                     <p className="mt-0.5 text-[11px] text-gray-500 line-clamp-1">by {book.author}</p>
+                    <p className="mt-1 text-[11px] font-semibold text-slate-700">
+                      Rs. {book.price ?? Math.round(Number(book.pricePaise || 0) / 100)}
+                    </p>
                     <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#0f5b82]">
                       View &amp; Pay
                     </p>

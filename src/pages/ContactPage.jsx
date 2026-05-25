@@ -1,7 +1,7 @@
 import PolicyLayout from './PolicyLayout'
 
 const supportPhone = import.meta.env.VITE_SUPPORT_PHONE || '+91 85588 00797'
-const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'illamerpunjab@gmail.com'
+const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'smartclasses800@gmail.com'
 
 function ContactPage() {
   return (

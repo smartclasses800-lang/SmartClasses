@@ -19,7 +19,7 @@ function PaymentSuccessPage() {
             Payment Received Successfully
           </h1>
           <p className="mt-3 text-slate-700">
-            Thank you for ordering ILLAM-E-PUNJAB. You will receive a confirmation
+            Thank you for ordering Smart Book Store. You will receive a confirmation
             email and tracker ID once shipment is booked through India Post.
           </p>
 

@@ -29,7 +29,7 @@ body {
   background:
     radial-gradient(circle at 90% -10%, rgba(215, 159, 18, 0.14), transparent 35%),
     radial-gradient(circle at 0% 45%, rgba(123, 24, 27, 0.08), transparent 40%),
-    linear-gradient(180deg, #fffdfb 0%, #fff 24%, #fff 100%);
+    linear-gradient(180deg, #fffdf9 0%, #ffffff 22%, #ffffff 100%);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -59,6 +59,15 @@ input:focus {
   outline: none;
 }
 
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  text-decoration: none;
+}
+
 @media (max-width: 640px) {
   button,
   a[href] {
@@ -69,4 +78,36 @@ input:focus {
     padding-left: 20px;
     padding-right: 20px;
   }
+}
+
+/* Animated gradient text for small announcement banners */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.live-gradient {
+  background: linear-gradient(90deg, #0f5b82 0%, #5ca4a9 25%, #f6b042 50%, #f76b8a 75%, #a16ad6 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: gradientShift 6s linear infinite;
+}
+
+.live-gradient-strong {
+  filter: saturate(1.05) contrast(1.05);
+}
+
+/* Subtle two-color background for announcement bar */
+.announcement-bg {
+  background: linear-gradient(90deg, #e6f7fa 0%, #fff8ef 100%);
 }

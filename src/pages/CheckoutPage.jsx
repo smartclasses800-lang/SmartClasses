@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, BookOpen, CheckCircle2, Star } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import SiteShell from '../components/SiteShell'
@@ -104,6 +104,22 @@ function getBookImages(book) {
   return [...new Set(images.filter(Boolean))]
 }
 
+function getAvailableMediumOptions(book) {
+  const isBilingual = Boolean(book?.bilangual || book?.bilingual)
+  const hasEnglish = Boolean(book?.onlyEnglish)
+  const hasPunjabi = Boolean(book?.onpunjabi)
+
+  if (isBilingual || (hasEnglish && hasPunjabi)) {
+    return ['English Medium', 'Punjabi Medium']
+  }
+
+  if (hasPunjabi && !hasEnglish) {
+    return ['Punjabi Medium']
+  }
+
+  return ['English Medium']
+}
+
 function CheckoutPage() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -120,7 +136,14 @@ function CheckoutPage() {
 
   const [formattedPrice, setFormattedPrice] = useState('')
   const bookImages = getBookImages(selectedBook)
+  const mediumOptions = useMemo(() => getAvailableMediumOptions(selectedBook), [selectedBook])
   const activeImage = bookImages[activeImageIndex] || selectedBook?.uri || '/book.webp'
+
+  useEffect(() => {
+    if (!mediumOptions.includes(formData.medium)) {
+      setFormData((prev) => ({ ...prev, medium: mediumOptions[0] }))
+    }
+  }, [formData.medium, mediumOptions])
 
   useEffect(() => {
     setActiveImageIndex(0)
@@ -522,26 +545,18 @@ function CheckoutPage() {
                     Book Language Medium
                   </legend>
                   <div className="mt-1 flex flex-col gap-1 text-sm text-slate-700">
-                    <label className="inline-flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="medium"
-                        value="English Medium"
-                        checked={formData.medium === 'English Medium'}
-                        onChange={updateField}
-                      />
-                      English Medium
-                    </label>
-                    <label className="inline-flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="medium"
-                        value="Punjabi Medium"
-                        checked={formData.medium === 'Punjabi Medium'}
-                        onChange={updateField}
-                      />
-                      Punjabi Medium
-                    </label>
+                    {mediumOptions.map((option) => (
+                      <label key={option} className="inline-flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="medium"
+                          value={option}
+                          checked={formData.medium === option}
+                          onChange={updateField}
+                        />
+                        {option}
+                      </label>
+                    ))}
                   </div>
                 </fieldset>
                 </div>

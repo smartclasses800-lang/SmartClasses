@@ -89,6 +89,7 @@ function HomePage() {
   const topSellersRef = useRef(null)
   const [topSellers, setTopSellers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
@@ -96,9 +97,15 @@ function HomePage() {
     async function loadCatalog() {
       try {
         const books = await fetchBooks()
-        if (active) setTopSellers(books)
-      } catch {
+        if (active) {
+          setTopSellers(books)
+          setLoadError('')
+        }
+      } catch (error) {
         if (active) setTopSellers([])
+        if (active) {
+          setLoadError(error?.message || 'Unable to load books right now.')
+        }
       } finally {
         if (active) setLoading(false)
       }
@@ -197,7 +204,11 @@ function HomePage() {
 
           {!loading && filteredBooks.length === 0 && (
             <div className="w-full rounded-2xl border border-dashed border-[#d9e6ef] bg-white px-6 py-10 text-center text-sm text-slate-600">
-              {isSearching ? 'No books match your search.' : 'No books available yet. Please check back soon.'}
+              {loadError
+                ? `Could not fetch books from API: ${loadError}`
+                : isSearching
+                  ? 'No books match your search.'
+                  : 'No books available yet. Please check back soon.'}
             </div>
           )}
 

@@ -1,4 +1,4 @@
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
 
 async function readJson(response) {
   const data = await response.json().catch(() => null)
@@ -61,7 +61,7 @@ export function getBookLanguageSummary(book) {
 }
 
 export async function fetchBooks() {
-  const response = await fetch(`${apiBaseUrl}/books`)
+  const response = await fetch(`${apiBaseUrl}/books`, { cache: 'no-store' })
   const data = await readJson(response)
   return Array.isArray(data.books) ? data.books.map(normalizeBook) : []
 }
@@ -71,7 +71,7 @@ export async function fetchBookBySku(sku) {
     return null
   }
 
-  const response = await fetch(`${apiBaseUrl}/books/${encodeURIComponent(sku)}`)
+  const response = await fetch(`${apiBaseUrl}/books/${encodeURIComponent(sku)}`, { cache: 'no-store' })
   const data = await readJson(response)
   return normalizeBook(data.book)
 }

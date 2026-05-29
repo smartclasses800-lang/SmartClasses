@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { getAdminSession, getAdminToken, logoutAdmin } from '../lib/adminAuth'
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
 
 const TABS = [
   { key: 'all', label: 'All Orders', icon: ClipboardList },

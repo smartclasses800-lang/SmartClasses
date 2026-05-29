@@ -8,7 +8,7 @@ import { fetchBookBySku, fetchBooks } from '../lib/booksApi'
 
 const supportPhone = import.meta.env.VITE_SUPPORT_PHONE || '+91 85588 00797'
 const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'smartclasses800@gmail.com'
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
 const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID || ''
 const SELECTED_BOOK_KEY = 'selectedBookData'
 

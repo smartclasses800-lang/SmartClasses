@@ -1,5 +1,5 @@
 const ADMIN_SESSION_KEY = 'illam_admin_session'
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
 
 export async function loginAdmin(email, password) {
   const response = await fetch(`${apiBaseUrl}/auth/admin/login`, {

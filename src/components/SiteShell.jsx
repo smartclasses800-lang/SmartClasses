@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, ShoppingCart, ChevronDown, X } from 'lucide-react';
 
-export default function SiteShell({ children, searchQuery = '', setSearchQuery }) {
+export default function SiteShell({ children, searchQuery = '', setSearchQuery, showSearch = false }) {
   const isSearching = searchQuery.trim().length > 0
 
   const handleChange = (e) => {
@@ -50,31 +50,32 @@ export default function SiteShell({ children, searchQuery = '', setSearchQuery }
             </div>
           </a>
 
-          {/* Desktop Search */}
-          <div className="flex-1 max-w-2xl mx-auto relative hidden md:flex items-center overflow-hidden rounded-full border border-gray-200 bg-white shadow-[0_8px_24px_rgba(15,91,130,0.08)] transition hover:border-gray-300 focus-within:border-[#0f5b82] focus-within:shadow-[0_0_0_3px_rgba(15,91,130,0.12)]">
-            <div className="pl-4 text-gray-400 shrink-0">
-              <Search className="h-5 w-5" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search by title, author or ISBN"
-              value={searchQuery}
-              onChange={handleChange}
-              className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm text-gray-800 outline-none placeholder:text-gray-400"
-            />
-            {isSearching && (
-              <button
-                onClick={clearSearch}
-                className="pr-3 text-gray-400 hover:text-gray-600 transition"
-              >
-                <X className="h-4 w-4" />
+          {showSearch && (
+            <div className="flex-1 max-w-2xl mx-auto relative hidden md:flex items-center overflow-hidden rounded-full border border-gray-200 bg-white shadow-[0_8px_24px_rgba(15,91,130,0.08)] transition hover:border-gray-300 focus-within:border-[#0f5b82] focus-within:shadow-[0_0_0_3px_rgba(15,91,130,0.12)]">
+              <div className="pl-4 text-gray-400 shrink-0">
+                <Search className="h-5 w-5" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search by title, author or ISBN"
+                value={searchQuery}
+                onChange={handleChange}
+                className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm text-gray-800 outline-none placeholder:text-gray-400"
+              />
+              {isSearching && (
+                <button
+                  onClick={clearSearch}
+                  className="pr-3 text-gray-400 hover:text-gray-600 transition"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              <button className="flex h-full shrink-0 items-center gap-1 border-l border-gray-200 bg-white/80 px-5 text-xs font-semibold uppercase tracking-wider text-[#0f5b82] transition hover:bg-[#f0f4ff]">
+                <span>Explore</span>
+                <ChevronDown className="h-3 w-3 stroke-[2.75]" />
               </button>
-            )}
-            <button className="flex h-full shrink-0 items-center gap-1 border-l border-gray-200 bg-white/80 px-5 text-xs font-semibold uppercase tracking-wider text-[#0f5b82] transition hover:bg-[#f0f4ff]">
-              <span>Explore</span>
-              <ChevronDown className="h-3 w-3 stroke-[2.75]" />
-            </button>
-          </div>
+            </div>
+          )}
 
           {/* Cart */}
           <a href="/cart" className="flex items-center gap-1.5 text-[#0f5b82] hover:text-[#0b4664] font-semibold text-sm transition shrink-0">
@@ -88,24 +89,25 @@ export default function SiteShell({ children, searchQuery = '', setSearchQuery }
           </a>
         </div>
 
-        {/* Mobile Search Bar — clean single border */}
-        <div className="md:hidden px-3 pb-3 pt-1">
-          <div className="flex items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus-within:border-[#0f5b82] focus-within:shadow-[0_0_0_2px_rgba(15,91,130,0.1)] transition">
-            <Search className="h-4 w-4 text-gray-400 shrink-0" />
-            <input
-              type="text"
-              placeholder="Search by title, author or ISBN"
-              value={searchQuery}
-              onChange={handleChange}
-              className="flex-1 bg-transparent text-sm text-gray-800 outline-none border-none px-2 placeholder:text-gray-400"
-            />
-            {isSearching && (
-              <button onClick={clearSearch} className="text-gray-400 hover:text-gray-600 shrink-0">
-                <X className="h-4 w-4" />
-              </button>
-            )}
+        {showSearch && (
+          <div className="md:hidden px-3 pb-3 pt-1">
+            <div className="flex items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus-within:border-[#0f5b82] focus-within:shadow-[0_0_0_2px_rgba(15,91,130,0.1)] transition">
+              <Search className="h-4 w-4 text-gray-400 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search by title, author or ISBN"
+                value={searchQuery}
+                onChange={handleChange}
+                className="flex-1 bg-transparent text-sm text-gray-800 outline-none border-none px-2 placeholder:text-gray-400"
+              />
+              {isSearching && (
+                <button onClick={clearSearch} className="text-gray-400 hover:text-gray-600 shrink-0">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
       {/* Main Content */}

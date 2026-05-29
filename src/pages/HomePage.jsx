@@ -141,7 +141,7 @@ function HomePage() {
   const isSearching = searchQuery.trim().length > 0
 
   return (
-    <SiteShell searchQuery={searchQuery} setSearchQuery={setSearchQuery}>
+    <SiteShell showSearch searchQuery={searchQuery} setSearchQuery={setSearchQuery}>
 
       {/* Hero Banner — hidden when searching */}
       {!isSearching && (

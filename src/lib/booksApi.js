@@ -139,3 +139,12 @@ export async function resetBooks(token) {
   const data = unwrapPayload(await readJson(response))
   return Array.isArray(data.books) ? data.books.map(normalizeBook) : []
 }
+
+export async function createManualOrder(token, payload) {
+  const response = await fetch(`${apiBaseUrl}/orders/manual`, {
+    method: 'POST',
+    headers: buildHeaders(token),
+    body: JSON.stringify(payload),
+  })
+  return readJson(response)
+}

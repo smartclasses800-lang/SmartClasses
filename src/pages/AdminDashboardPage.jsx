@@ -7,6 +7,7 @@ import {
   CreditCard,
   ExternalLink,
   BookOpen,
+  PlusCircle,
   Loader2,
   LogOut,
   PackageCheck,
@@ -16,6 +17,8 @@ import {
   X,
   Truck,
 } from 'lucide-react'
+import ManualOrderModal from '../components/ManualOrderModal'
+import { fetchBooks } from '../lib/booksApi'
 import { getAdminSession, getAdminToken, logoutAdmin } from '../lib/adminAuth'
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
@@ -58,6 +61,8 @@ function AdminDashboardPage() {
   const navigate = useNavigate()
   const [orders, setOrders] = useState([])
   const [trackerDrafts, setTrackerDrafts] = useState({})
+  const [manualModalOpen, setManualModalOpen] = useState(false)
+  const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [actionMessage, setActionMessage] = useState('')
   const [error, setError] = useState('')
@@ -96,6 +101,7 @@ function AdminDashboardPage() {
       return
     }
     loadOrders()
+    fetchBooks().then(setBooks).catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, navigate])
 
@@ -254,6 +260,16 @@ function AdminDashboardPage() {
             >
               <BookOpen className="h-4 w-4" /> Show Books
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setManualModalOpen(true)
+                setDrawerOpen(false)
+              }}
+              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-[var(--maroon)] hover:bg-[#fff5f5]"
+            >
+              <PlusCircle className="h-4 w-4" /> New Manual Order
+            </button>
             <Link
               to="/"
               onClick={() => setDrawerOpen(false)}
@@ -306,6 +322,12 @@ function AdminDashboardPage() {
               >
                 View Store
               </Link>
+              <button
+                onClick={() => setManualModalOpen(true)}
+                className="inline-flex items-center gap-2 rounded-md bg-[var(--maroon)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--maroon-hover)]"
+              >
+                <PlusCircle className="h-4 w-4" /> New Manual Order
+              </button>
               <button
                 onClick={handleLogout}
                 className="inline-flex items-center gap-2 rounded-md bg-[var(--maroon)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--maroon-hover)]"
@@ -577,6 +599,17 @@ function AdminDashboardPage() {
           )}
         </section>
       </div>
+
+      <ManualOrderModal
+        open={manualModalOpen}
+        onClose={() => setManualModalOpen(false)}
+        onOrderCreated={() => {
+          loadOrders()
+          setActionMessage('Manual order created and marked as paid.')
+        }}
+        books={books}
+        token={token}
+      />
     </div>
   )
 }

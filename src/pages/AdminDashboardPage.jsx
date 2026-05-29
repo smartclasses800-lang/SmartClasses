@@ -434,7 +434,7 @@ function AdminDashboardPage() {
                             <span className="font-semibold text-slate-900">Tracker:</span>
                             <span className="font-mono font-bold text-[var(--maroon)]">{order.trackerId}</span>
                             <a
-                              href="https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx"
+                              href="https://www.indiapost.gov.in/"
                               target="_blank"
                               rel="noreferrer"
                               className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"

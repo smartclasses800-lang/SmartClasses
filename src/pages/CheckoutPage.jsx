@@ -670,6 +670,7 @@ function CheckoutPage() {
               </form>
 
               <div className="mt-5 text-center text-xs leading-5 text-slate-500 lg:hidden">
+                After payment, you will receive a confirmation email with shipment tracking.
                 Need help? Call{' '}
                 <a href={`tel:${supportPhone.replace(/\s+/g, '')}`} className="font-semibold text-[var(--maroon)] hover:underline">
                   {supportPhone}

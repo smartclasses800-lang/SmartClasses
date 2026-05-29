@@ -1,11 +1,44 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Loader2, Search, X, ChevronDown, MessageCircle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, ChevronDown } from 'lucide-react'
 import SiteShell from '../components/SiteShell'
 import homebannerbg from '../assets/banner.jpeg'
+import demoBookCover from '../assets/demo.jpg'
 import { fetchBooks } from '../lib/booksApi'
 
 const SELECTED_BOOK_KEY = 'selectedBookData'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '')
+const BACKEND_PLACEHOLDER_PATHS = new Set(['/assets/demo.jpg', 'assets/demo.jpg'])
+
+function resolveBookImage(book) {
+  const candidates = [
+    ...(Array.isArray(book?.images) ? book.images : []),
+    book?.uri,
+    book?.cover,
+  ]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean)
+
+  for (const candidate of candidates) {
+    const lowered = candidate.toLowerCase()
+    if (BACKEND_PLACEHOLDER_PATHS.has(lowered)) {
+      continue
+    }
+
+    if (/^https?:\/\//i.test(candidate) || candidate.startsWith('data:image/')) {
+      return candidate
+    }
+
+    if (candidate.startsWith('/') && API_ORIGIN) {
+      return `${API_ORIGIN}${candidate}`
+    }
+
+    return candidate
+  }
+
+  return demoBookCover
+}
 
 const FAQS = [
   {
@@ -234,11 +267,20 @@ function HomePage() {
 
 // Shared card inner UI
 function BookCardInner({ book }) {
-  console.log('BookCardInner render:', book) // Debug log to check book data
+  const imageSrc = resolveBookImage(book)
+
   return (
     <div className="overflow-hidden rounded-[0.625rem] border border-[#d9e6ef] bg-white shadow-[0_10px_30px_-18px_rgba(15,91,130,0.45)] transition duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_18px_40px_-18px_rgba(15,91,130,0.55)]">
       <div className="aspect-[2/3] w-full overflow-hidden bg-[#f3f7fb]">
-        <img src={book.uri} alt={book.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
+        <img
+          src={imageSrc}
+          alt={book.title}
+          onError={(event) => {
+            event.currentTarget.onerror = null
+            event.currentTarget.src = demoBookCover
+          }}
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+        />
       </div>
       <div className="border-t border-[#e3edf5] p-3">
         <h3 className="text-xs font-bold text-gray-800 line-clamp-1 group-hover:text-[#0f5b82]">

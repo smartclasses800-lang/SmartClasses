@@ -17,6 +17,13 @@ function buildHeaders(token) {
   return headers
 }
 
+function unwrapPayload(payload) {
+  if (payload && typeof payload === 'object' && payload.data && typeof payload.data === 'object') {
+    return payload.data
+  }
+  return payload
+}
+
 function normalizeBook(book) {
   if (!book) {
     return null
@@ -26,9 +33,11 @@ function normalizeBook(book) {
     ? book.images
     : typeof book.uri === 'string' && book.uri
       ? [book.uri]
+      : typeof book.cover === 'string' && book.cover
+        ? [book.cover]
       : []
 
-  const primaryImage = images[0] || book.uri || '/assets/demo.jpg'
+  const primaryImage = images[0] || book.uri || book.cover || '/assets/demo.jpg'
 
   return {
     ...book,
@@ -63,7 +72,7 @@ export function getBookLanguageSummary(book) {
 
 export async function fetchBooks() {
   const response = await fetch(`${apiBaseUrl}/books`, { cache: 'no-store' })
-  const data = await readJson(response)
+  const data = unwrapPayload(await readJson(response))
   return Array.isArray(data.books) ? data.books.map(normalizeBook) : []
 }
 
@@ -73,7 +82,7 @@ export async function fetchBookBySku(sku) {
   }
 
   const response = await fetch(`${apiBaseUrl}/books/${encodeURIComponent(sku)}`, { cache: 'no-store' })
-  const data = await readJson(response)
+  const data = unwrapPayload(await readJson(response))
   return normalizeBook(data.book)
 }
 
@@ -83,7 +92,7 @@ export async function createBook(token, payload) {
     headers: buildHeaders(token),
     body: JSON.stringify(payload),
   })
-  const data = await readJson(response)
+  const data = unwrapPayload(await readJson(response))
   return normalizeBook(data.book)
 }
 
@@ -93,7 +102,7 @@ export async function updateBook(token, sku, payload) {
     headers: buildHeaders(token),
     body: JSON.stringify(payload),
   })
-  const data = await readJson(response)
+  const data = unwrapPayload(await readJson(response))
   return normalizeBook(data.book)
 }
 
@@ -110,7 +119,7 @@ export async function uploadBookImages(token, files) {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     body: formData,
   })
-  const data = await readJson(response)
+  const data = unwrapPayload(await readJson(response))
   return Array.isArray(data.images) ? data.images.filter(Boolean) : []
 }
 
@@ -127,6 +136,6 @@ export async function resetBooks(token) {
     method: 'POST',
     headers: buildHeaders(token),
   })
-  const data = await readJson(response)
+  const data = unwrapPayload(await readJson(response))
   return Array.isArray(data.books) ? data.books.map(normalizeBook) : []
 }

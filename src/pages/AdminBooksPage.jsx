@@ -590,7 +590,7 @@ function AdminBooksPage() {
                           <div>
                             <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Price</p>
                             <p className="text-lg font-bold text-[var(--maroon)]">
-                              {formatCurrency(book.pricePaise || book.price * 100)}
+                              {formatCurrency(book.pricePaise/100 || book.price)}
                             </p>
                           </div>
                           <div className="flex gap-2">

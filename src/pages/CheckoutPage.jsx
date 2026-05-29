@@ -492,9 +492,19 @@ function CheckoutPage() {
 
             <div className="p-6 sm:p-8">
               <div className="rounded-[1.6rem] border border-[#f0e1e2] bg-[#fffaf7] p-5 sm:p-6">
-                <div className="flex items-center gap-2 text-sm font-semibold text-[var(--maroon)]">
-                  <Star className="h-4 w-4" />
-                  Direct checkout is ready. Fill the delivery details below and continue to payment.
+                <div className="flex items-start gap-2 text-sm font-semibold text-[var(--maroon)]">
+                  <Star className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p className="leading-6">
+                    After Payment check you gmail inbox, if you didnt receive the email contact us immediately on{' '}
+                    <a
+                      href="https://wa.me/918054643829"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="whitespace-nowrap underline decoration-2 underline-offset-4 hover:opacity-80"
+                    >
+                      whatsapp
+                    </a>
+                  </p>
                 </div>
               </div>
 
@@ -670,7 +680,6 @@ function CheckoutPage() {
               </form>
 
               <div className="mt-5 text-center text-xs leading-5 text-slate-500 lg:hidden">
-                After payment, you will receive a confirmation email with shipment tracking.
                 Need help? Call{' '}
                 <a href={`tel:${supportPhone.replace(/\s+/g, '')}`} className="font-semibold text-[var(--maroon)] hover:underline">
                   {supportPhone}

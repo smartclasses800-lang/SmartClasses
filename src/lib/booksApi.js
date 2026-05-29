@@ -2,6 +2,7 @@ const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/,
 
 async function readJson(response) {
   const data = await response.json().catch(() => null)
+  console.log('API Response:', { status: response.status, data })
   if (!response.ok) {
     throw new Error(data?.message || 'Unable to load books')
   }

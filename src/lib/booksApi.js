@@ -21,8 +21,18 @@ function normalizeBook(book) {
     return null
   }
 
+  const images = Array.isArray(book.images)
+    ? book.images
+    : typeof book.uri === 'string' && book.uri
+      ? [book.uri]
+      : []
+
+  const primaryImage = images[0] || book.uri || '/assets/demo.jpg'
+
   return {
     ...book,
+    images: [...new Set(images.filter(Boolean))],
+    uri: primaryImage,
     price: Number.isFinite(Number(book.price))
       ? Number(book.price)
       : Math.round(Number(book.pricePaise || 0) / 100),
@@ -84,6 +94,23 @@ export async function updateBook(token, sku, payload) {
   })
   const data = await readJson(response)
   return normalizeBook(data.book)
+}
+
+export async function uploadBookImages(token, files) {
+  const formData = new FormData()
+  Array.from(files || []).forEach((file) => {
+    if (file) {
+      formData.append('images', file)
+    }
+  })
+
+  const response = await fetch(`${apiBaseUrl}/books/upload-images`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: formData,
+  })
+  const data = await readJson(response)
+  return Array.isArray(data.images) ? data.images.filter(Boolean) : []
 }
 
 export async function deleteBook(token, sku) {

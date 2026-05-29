@@ -94,12 +94,23 @@ function getLanguageBadges(book) {
   return badges
 }
 
+function getBookImages(book) {
+  const images = Array.isArray(book?.images)
+    ? book.images
+    : typeof book?.uri === 'string' && book.uri
+      ? [book.uri]
+      : []
+
+  return [...new Set(images.filter(Boolean))]
+}
+
 function CheckoutPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const initialBook = { ...getSavedBookState(), ...(location.state?.book || {}) }
   const [selectedBook, setSelectedBook] = useState(initialBook)
   const [formData, setFormData] = useState(getSavedFormState)
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
@@ -108,6 +119,26 @@ function CheckoutPage() {
   const [loading, setLoading] = useState(false)
 
   const [formattedPrice, setFormattedPrice] = useState('')
+  const bookImages = getBookImages(selectedBook)
+  const activeImage = bookImages[activeImageIndex] || selectedBook?.uri || '/book.webp'
+
+  useEffect(() => {
+    setActiveImageIndex(0)
+  }, [selectedBook?.sku])
+
+  useEffect(() => {
+    if (bookImages.length <= 1) {
+      return undefined
+    }
+
+    const intervalId = window.setInterval(() => {
+      setActiveImageIndex((current) => (current + 1) % bookImages.length)
+    }, 3500)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [bookImages.length])
 
   useEffect(() => {
     let active = true
@@ -228,6 +259,7 @@ function CheckoutPage() {
         product: {
           sku: selectedBook.sku || 'illam-e-punjab-book',
           title: selectedBook.title || 'ILLAM-E-PUNJAB',
+          image: bookImages[0] || selectedBook.uri || '/book.webp',
           quantity: 1,
         },
       }
@@ -279,7 +311,7 @@ function CheckoutPage() {
         name: selectedBook.title || 'ILLAM-E-PUNJAB',
         description: selectedBook.description || 'Punjab History Book Purchase',
         order_id: order.orderId,
-        image: selectedBook.uri || '/book.webp',
+        image: bookImages[0] || selectedBook.uri || '/book.webp',
         prefill: {
           name: formData.fullName,
           email: formData.email,
@@ -347,13 +379,15 @@ function CheckoutPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8d6a6c]">
                 Selected Book
               </p>
-              <div className="mt-4 grid gap-5 xl:grid-cols-[260px_1fr] xl:items-start">
-                <div className="mx-auto w-full max-w-[180px] overflow-hidden rounded-[1.6rem] border border-[#e8d7d8] bg-[#fbf4f4] shadow-[0_16px_40px_-28px_rgba(123,24,27,0.35)] sm:max-w-[210px] xl:max-w-none">
-                  <img
-                    src={selectedBook.uri || '/book.webp'}
-                    alt={selectedBook.title}
-                    className="aspect-[2/3] w-full object-cover"
-                  />
+              <div className="mt-4 grid gap-5 xl:grid-cols-[320px_1fr] xl:items-start">
+                <div className="mx-auto w-full max-w-[240px] overflow-hidden rounded-[1.6rem] border border-[#e8d7d8] bg-[#fbf4f4] shadow-[0_16px_40px_-28px_rgba(123,24,27,0.35)] sm:max-w-[280px] xl:max-w-none">
+                  <div className="relative overflow-hidden bg-[#fbf4f4]">
+                    <img
+                      src={activeImage}
+                      alt={selectedBook.title}
+                      className="aspect-[3/4] w-full object-cover transition duration-300"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-3">
@@ -382,6 +416,12 @@ function CheckoutPage() {
                     {selectedBook.description || 'This selected book is preloaded from the home page and ready for direct Razorpay checkout.'}
                   </p>
 
+                  {/* {bookImages.length > 1 ? (
+                    <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      Auto-sliding gallery enabled
+                    </p>
+                  ) : null} */}
+
                   <div className="grid gap-3 sm:grid-cols-3 xl:hidden">
                     <div className="rounded-2xl border border-[#eadede] bg-white p-4">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -389,12 +429,12 @@ function CheckoutPage() {
                       </p>
                       <p className="mt-1 text-sm font-semibold text-slate-900">{formattedPrice}</p>
                     </div>
-                    <div className="rounded-2xl border border-[#eadede] bg-white p-4">
+                    {/* <div className="rounded-2xl border border-[#eadede] bg-white p-4">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                         Payment
                       </p>
                       <p className="mt-1 text-sm font-semibold text-slate-900">Razorpay</p>
-                    </div>
+                    </div> */}
                     <div className="rounded-2xl border border-[#eadede] bg-white p-4">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                         Support

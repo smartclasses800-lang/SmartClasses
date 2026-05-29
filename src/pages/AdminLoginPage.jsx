@@ -6,7 +6,7 @@ import { isAdminAuthenticated, loginAdmin } from '../lib/adminAuth'
 function AdminLoginPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
-  const [secretKey, setSecretKey] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -20,7 +20,7 @@ function AdminLoginPage() {
     event.preventDefault()
     setError('')
     setLoading(true)
-    loginAdmin(email.trim(), secretKey.trim())
+    loginAdmin(email.trim(), password.trim())
       .then(() => navigate('/admin', { replace: true }))
       .catch((loginError) => setError(loginError.message || 'Invalid admin credentials.'))
       .finally(() => setLoading(false))
@@ -56,15 +56,15 @@ function AdminLoginPage() {
             </label>
 
             <label className="block text-sm font-semibold text-slate-700">
-              Secret Key
+              Password
               <div className="mt-1 flex items-center rounded-md border border-[#dac6c7] px-3 py-2">
                 <LockKeyhole className="mr-2 h-4 w-4 text-slate-500" />
                 <input
-                  value={secretKey}
-                  onChange={(event) => setSecretKey(event.target.value)}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   className="w-full outline-none"
                   type="password"
-                  placeholder="Enter secret key"
+                  placeholder="Enter password"
                   required
                 />
               </div>

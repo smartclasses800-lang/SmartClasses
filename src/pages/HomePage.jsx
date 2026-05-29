@@ -234,6 +234,7 @@ function HomePage() {
 
 // Shared card inner UI
 function BookCardInner({ book }) {
+  console.log('BookCardInner render:', book) // Debug log to check book data
   return (
     <div className="overflow-hidden rounded-[0.625rem] border border-[#d9e6ef] bg-white shadow-[0_10px_30px_-18px_rgba(15,91,130,0.45)] transition duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_18px_40px_-18px_rgba(15,91,130,0.55)]">
       <div className="aspect-[2/3] w-full overflow-hidden bg-[#f3f7fb]">

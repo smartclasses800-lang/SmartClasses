@@ -13,6 +13,7 @@ import {
   Pencil,
   RefreshCw,
   Send,
+  X,
   Truck,
 } from 'lucide-react'
 import { getAdminSession, getAdminToken, logoutAdmin } from '../lib/adminAuth'
@@ -61,6 +62,7 @@ function AdminDashboardPage() {
   const [actionMessage, setActionMessage] = useState('')
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('paid')
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [sendingTracker, setSendingTracker] = useState({})
   const [markingDelivered, setMarkingDelivered] = useState({})
   const [resendingTracker, setResendingTracker] = useState({})
@@ -197,6 +199,79 @@ function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-[var(--muted-bg)] px-4 py-8 sm:px-6 lg:px-8">
+      <div
+        className={`fixed inset-0 z-50 sm:hidden transition-opacity duration-300 ${
+          drawerOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+        aria-hidden={!drawerOpen}
+      >
+        <button
+          type="button"
+          aria-label="Close admin drawer"
+          className="absolute inset-0 bg-black/50"
+          onClick={() => setDrawerOpen(false)}
+        />
+        <aside
+          className={`absolute left-0 top-0 flex h-full w-80 max-w-[85vw] transform flex-col bg-white shadow-2xl transition-transform duration-300 ${
+            drawerOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="flex items-start justify-between border-b border-[#ebdcdc] px-4 py-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gold)]">
+                ILLAM-E-PUNJAB
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[var(--maroon)]">
+                {session?.admin?.email || 'Admin'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(false)}
+              className="rounded-md p-2 text-slate-500 hover:bg-slate-100"
+              aria-label="Close admin drawer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="flex flex-1 flex-col gap-1 p-3">
+            <button
+              type="button"
+              onClick={() => {
+                loadOrders()
+                setDrawerOpen(false)
+              }}
+              disabled={loading}
+              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-60"
+            >
+              <RefreshCw className="h-4 w-4" /> Refresh Orders
+            </button>
+            <Link
+              to="/admin/books"
+              onClick={() => setDrawerOpen(false)}
+              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            >
+              <BookOpen className="h-4 w-4" /> Show Books
+            </Link>
+            <Link
+              to="/"
+              onClick={() => setDrawerOpen(false)}
+              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            >
+              <ExternalLink className="h-4 w-4" /> View Store
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-red-600 hover:bg-red-50"
+            >
+              <LogOut className="h-4 w-4" /> Logout
+            </button>
+          </div>
+        </aside>
+      </div>
+
       <div className="mx-auto max-w-7xl">
         <header className="mb-6 rounded-2xl border border-[#ebdcdc] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -204,14 +279,14 @@ function AdminDashboardPage() {
               <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gold)]">
                 ILLAM-E-PUNJAB Admin
               </p>
-              <h1 className="title-font mt-1 text-3xl font-bold text-[var(--maroon)]">
+              <h1 className="title-font mt-1 text-2xl font-bold text-[var(--maroon)] sm:text-3xl">
                 Orders Dashboard
               </h1>
               <p className="mt-1 text-sm text-slate-700">
                 Logged in as {session?.admin?.email || 'Admin'}
               </p>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="hidden flex-wrap gap-3 sm:flex">
               <button
                 onClick={loadOrders}
                 disabled={loading}
@@ -238,6 +313,14 @@ function AdminDashboardPage() {
                 <LogOut className="h-4 w-4" /> Logout
               </button>
             </div>
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="rounded-md border border-[#e0cfcf] p-2 text-slate-700 sm:hidden"
+              aria-label="Open admin drawer"
+            >
+              <span className="block text-xl leading-none">☰</span>
+            </button>
           </div>
         </header>
 
@@ -258,39 +341,41 @@ function AdminDashboardPage() {
             <button
               key={card.key}
               onClick={() => setActiveTab(card.key)}
-              className={`rounded-xl border p-4 shadow-sm text-left transition ${
+              className={`rounded-xl border p-3 text-left shadow-sm transition sm:p-4 ${
                 activeTab === card.key
                   ? 'border-[var(--maroon)] bg-[#fff5f5] ring-1 ring-[var(--maroon)]'
                   : 'border-[#eadcdc] bg-white hover:bg-slate-50'
               }`}
             >
               <p className="text-sm text-slate-600">{card.label}</p>
-              <p className={`mt-2 text-3xl font-bold ${card.color}`}>{card.count}</p>
+              <p className={`mt-2 text-2xl font-bold sm:text-3xl ${card.color}`}>{card.count}</p>
             </button>
           ))}
         </section>
 
-        <div className="mb-6 flex flex-wrap gap-2">
-          {TABS.map((tab) => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition ${
-                  activeTab === tab.key
-                    ? 'border-[var(--maroon)] bg-[var(--maroon)] text-white'
-                    : 'border-[#e0cfcf] bg-white text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <Icon className="h-4 w-4" /> {tab.label}
-              </button>
-            )
-          })}
+        <div className="mb-6 -mx-4 overflow-x-auto px-4 scrollbar-hide sm:mx-0 sm:overflow-visible sm:px-0">
+          <div className="flex w-max gap-2 sm:w-auto sm:flex-wrap">
+            {TABS.map((tab) => {
+              const Icon = tab.icon
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition ${
+                    activeTab === tab.key
+                      ? 'border-[var(--maroon)] bg-[var(--maroon)] text-white'
+                      : 'border-[#e0cfcf] bg-white text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" /> {tab.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <section className="rounded-2xl border border-[#ebdddd] bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="title-font text-2xl font-bold text-[var(--maroon)]">
+          <h2 className="title-font text-xl font-bold text-[var(--maroon)] sm:text-2xl">
             {TABS.find((t) => t.key === activeTab)?.label}
           </h2>
 
@@ -375,20 +460,20 @@ function AdminDashboardPage() {
                       </div>
 
                       {order.status === 'paid' ? (
-                        <div className="flex w-full flex-col gap-2 xl:min-w-[220px] xl:w-auto">
+                        <div className="flex w-full flex-col gap-2 border-t border-[#ecdede] pt-4 xl:min-w-[220px] xl:w-auto xl:border-t-0 xl:pt-0">
                           <input
                             value={trackerDrafts[order.razorpayOrderId] ?? order.trackerId ?? ''}
                             onChange={(event) =>
                               handleTrackerDraft(order.razorpayOrderId, event.target.value)
                             }
                             disabled={anyActionLoading}
-                            className="rounded-md border border-[#dac6c7] px-3 py-2 text-sm outline-none ring-[var(--maroon)]/25 transition focus:ring disabled:opacity-60"
+                            className="w-full rounded-md border border-[#dac6c7] px-3 py-2 text-sm outline-none ring-[var(--maroon)]/25 transition focus:ring disabled:opacity-60"
                             placeholder="Enter India Post tracker ID"
                           />
                           <button
                             onClick={() => handleSendTrackerEmail(order)}
                             disabled={isSending || isMarking}
-                            className="inline-flex items-center justify-center gap-2 rounded-md border border-[#d9c6c7] px-3 py-2 text-sm font-semibold text-[var(--maroon)] transition hover:bg-[#faf3f3] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-[#d9c6c7] px-3 py-2 text-sm font-semibold text-[var(--maroon)] transition hover:bg-[#faf3f3] disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {isSending ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -400,7 +485,7 @@ function AdminDashboardPage() {
                           <button
                             onClick={() => handleMarkDelivered(order)}
                             disabled={isSending || isMarking}
-                            className="inline-flex items-center justify-center gap-2 rounded-md bg-[var(--maroon)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--maroon-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[var(--maroon)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--maroon-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {isMarking ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -411,20 +496,20 @@ function AdminDashboardPage() {
                           </button>
                         </div>
                       ) : order.status === 'out_for_delivery' ? (
-                        <div className="flex w-full flex-col gap-2 xl:min-w-[220px] xl:w-auto">
+                        <div className="flex w-full flex-col gap-2 border-t border-[#ecdede] pt-4 xl:min-w-[220px] xl:w-auto xl:border-t-0 xl:pt-0">
                           <input
                             value={trackerDrafts[order.razorpayOrderId] ?? order.trackerId ?? ''}
                             onChange={(event) =>
                               handleTrackerDraft(order.razorpayOrderId, event.target.value)
                             }
                             disabled={anyActionLoading}
-                            className="rounded-md border border-[#dac6c7] px-3 py-2 text-sm outline-none ring-[var(--maroon)]/25 transition focus:ring disabled:opacity-60"
+                            className="w-full rounded-md border border-[#dac6c7] px-3 py-2 text-sm outline-none ring-[var(--maroon)]/25 transition focus:ring disabled:opacity-60"
                             placeholder="Edit tracker ID if needed"
                           />
                           <button
                             onClick={() => handleResendTracker(order)}
                             disabled={isResending || isMarking}
-                            className="inline-flex items-center justify-center gap-2 rounded-md border border-[#d9c6c7] px-3 py-2 text-xs font-semibold text-[var(--maroon)] transition hover:bg-[#faf3f3] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-[#d9c6c7] px-3 py-2 text-xs font-semibold text-[var(--maroon)] transition hover:bg-[#faf3f3] disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {isResending ? (
                               <Loader2 className="h-3 w-3 animate-spin" />
@@ -436,7 +521,7 @@ function AdminDashboardPage() {
                           <button
                             onClick={() => handleMarkDelivered(order)}
                             disabled={isResending || isMarking}
-                            className="inline-flex items-center justify-center gap-2 rounded-md bg-[var(--maroon)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--maroon-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[var(--maroon)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--maroon-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {isMarking ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -450,7 +535,7 @@ function AdminDashboardPage() {
                           </p>
                         </div>
                       ) : order.status === 'delivered' ? (
-                        <div className="flex w-full flex-col gap-2 xl:min-w-[220px] xl:w-auto">
+                        <div className="flex w-full flex-col gap-2 border-t border-[#ecdede] pt-4 xl:min-w-[220px] xl:w-auto xl:border-t-0 xl:pt-0">
                           <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
                             <p className="flex items-center gap-1 font-semibold">
                               <CheckCircle className="h-4 w-4" /> Delivered
@@ -467,13 +552,13 @@ function AdminDashboardPage() {
                               handleTrackerDraft(order.razorpayOrderId, event.target.value)
                             }
                             disabled={anyActionLoading}
-                            className="rounded-md border border-[#dac6c7] px-3 py-2 text-sm outline-none ring-[var(--maroon)]/25 transition focus:ring disabled:opacity-60"
+                            className="w-full rounded-md border border-[#dac6c7] px-3 py-2 text-sm outline-none ring-[var(--maroon)]/25 transition focus:ring disabled:opacity-60"
                             placeholder="Edit tracker ID if needed"
                           />
                           <button
                             onClick={() => handleResendTracker(order)}
                             disabled={isResending}
-                            className="inline-flex items-center justify-center gap-2 rounded-md border border-[#d9c6c7] px-3 py-2 text-xs font-semibold text-[var(--maroon)] transition hover:bg-[#faf3f3] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-[#d9c6c7] px-3 py-2 text-xs font-semibold text-[var(--maroon)] transition hover:bg-[#faf3f3] disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {isResending ? (
                               <Loader2 className="h-3 w-3 animate-spin" />
